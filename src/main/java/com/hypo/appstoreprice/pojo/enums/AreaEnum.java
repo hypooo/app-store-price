@@ -18,27 +18,27 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AreaEnum {
 
-    USA("us", "美国", "$", "USD", StrUtil.COMMA),
+    USA("us", "美国", "$", "USD", StrUtil.COMMA, "In-App Purchases"),
 
-    CHINA("cn", "中国", "¥", "CNY", StrUtil.COMMA),
+    CHINA("cn", "中国", "¥", "CNY", StrUtil.COMMA, "App内购买"),
 
-    TAIWAN("tw", "台湾", "NT$", "TWD", StrUtil.COMMA),
+    TAIWAN("tw", "台湾", "NT$", "TWD", StrUtil.COMMA, "App內購買"),
 
-    HONGKONG("hk", "香港", "HK$", "HKD", StrUtil.COMMA),
+    HONGKONG("hk", "香港", "HK$", "HKD", StrUtil.COMMA, "App 內購買"),
 
-    JAPAN("jp", "日本", "¥", "JPY", StrUtil.COMMA),
+    JAPAN("jp", "日本", "¥", "JPY", StrUtil.COMMA, "アプリ内課金"),
 
-    KOREA("kr", "韩国", "₩", "KRW", StrUtil.COMMA),
+    KOREA("kr", "韩国", "₩", "KRW", StrUtil.COMMA, "앱 내 구입"),
 
-    TURKEY("tr", "土耳其", "₺", "TRY", StrUtil.DOT),
+    TURKEY("tr", "土耳其", "₺", "TRY", StrUtil.DOT, "In-App Purchases"),
 
-    NIGERIA("ng", "尼日利亚", "₦", "NGN", StrUtil.COMMA),
+    NIGERIA("ng", "尼日利亚", "₦", "NGN", StrUtil.COMMA, "In-App Purchases"),
 
-    INDIA("in", "印度", "₹", "INR", StrUtil.COMMA),
+    INDIA("in", "印度", "₹", "INR", StrUtil.COMMA, "In-App Purchases"),
 
-    PAKISTAN("pk", "巴基斯坦", "₨", "PKR", StrUtil.COMMA),
+    PAKISTAN("pk", "巴基斯坦", "₨", "PKR", StrUtil.COMMA, "In-App Purchases"),
 
-    BRAZIL("br", "巴西", "R$", "BRL", StrUtil.DOT),
+    BRAZIL("br", "巴西", "R$", "BRL", StrUtil.DOT, "Compras dentro do app"),
 
     ;
 
@@ -66,6 +66,11 @@ public enum AreaEnum {
      * thousands separator
      */
     private final String thousandsSeparator;
+
+    /**
+     * in app purchase str
+     */
+    private final String InAppPurchaseStr;
 
     /**
      * get by currency code

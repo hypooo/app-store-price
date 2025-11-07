@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @UtilityClass
 public class ExchangeRateUtil {
 
-    private final static Cache<String, String> RATE_CACHE = new TimedCache<>(Duration.ofHours(1L).toMillis(), new ConcurrentHashMap<>());
+    private final static Cache<String, String> RATE_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
 
     /**
      * get exchange rate map

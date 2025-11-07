@@ -39,6 +39,16 @@ public class AppController {
     }
 
     /**
+     * get popular search word list
+     *
+     * @return {@link List }<{@link String }>
+     */
+    @PostMapping("getPopularSearchWordList")
+    public List<String> getPopularSearchWordList() {
+        return appService.getPopularSearchWordList();
+    }
+
+    /**
      * get app list
      *
      * @param reqDTO req dto

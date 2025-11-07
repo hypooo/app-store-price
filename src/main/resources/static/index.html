@@ -262,6 +262,8 @@
                             class="grow"
                             :disabled="loadingAppList || loading"
                             @keyup.enter="loading ? null : searchAppList"
+                            @focus="onSearchInputFocus"
+                            @blur="onSearchInputBlur"
                         />
                         <button
                             type="button"
@@ -288,6 +290,25 @@
                     <div x-show="areaListError" class="text-red-500 text-sm mt-1" x-text="areaListError"></div>
                 </div>
             </div>
+
+            <!-- 热门搜索词 -->
+            <div x-show="showPopularWords && popularWords.length > 0" x-transition class="mt-4">
+                <label class="label">
+                    <span class="label-text">🔥 热门搜索</span>
+                </label>
+                <div class="flex flex-wrap gap-2" @mousedown.prevent>
+                    <template x-for="word in popularWords" :key="word">
+                        <button
+                            type="button"
+                            class="btn btn-xs btn-fresh-secondary"
+                            @mousedown.prevent="selectPopularWord(word)"
+                            :disabled="loadingAppList || loading"
+                            x-text="word">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
             <div class="form-control mt-4">
                 <button
                     class="btn btn-fresh-secondary"
@@ -486,6 +507,12 @@
             loadingAppList: false,
             errorAppList: '',
 
+            // 热门搜索词相关
+            popularWords: [],  // 热门搜索词列表
+            showPopularWords: false,  // 控制热门搜索词显示状态
+            popularWordsLoading: false,  // 热门搜索词加载状态
+            popularWordsError: '',  // 热门搜索词错误信息
+
             // 查询应用信息相关
             appId: '',
             results: [],
@@ -650,9 +677,63 @@
                 }
             },
 
+            // 获取热门搜索词
+            async getPopularSearchWords() {
+                this.popularWordsLoading = true;
+                this.popularWordsError = '';
+
+                try {
+                    const response = await axios.post('/app/getPopularSearchWordList', {}, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.data.code === 0) {
+                        this.popularWords = response.data.data || [];
+                    } else {
+                        this.popularWordsError = response.data.message || '获取热门搜索词失败';
+                        this.popularWords = [];
+                    }
+                } catch (err) {
+                    console.error('获取热门搜索词错误:', err);
+                    this.popularWordsError = '获取热门搜索词失败，请检查网络连接或接口地址';
+                    this.popularWords = [];
+                } finally {
+                    this.popularWordsLoading = false;
+                }
+            },
+
+            // 选择热门搜索词
+            selectPopularWord(word) {
+                this.appName = word;
+                this.showPopularWords = false; // 选择后隐藏热门词
+                // 自动执行搜索
+                this.searchAppList();
+            },
+
+            // 搜索框获得焦点（每次都获取最新热门搜索词）
+            onSearchInputFocus() {
+                // 每次聚焦都重新获取最新的热门搜索词
+                if (!this.popularWordsLoading) {
+                    this.getPopularSearchWords();
+                }
+                this.showPopularWords = true;
+            },
+
+            // 搜索框失去焦点（延迟隐藏，确保点击事件能正常触发）
+            onSearchInputBlur() {
+                setTimeout(() => {
+                    this.showPopularWords = false;
+                }, 200);
+            },
+
             init() {
                 // 获取地区列表
                 this.getAreaList();
+
+                // 预加载热门搜索词
+                this.getPopularSearchWords();
 
                 // 页面加载完成后设置标志，避免闪烁
                 this.$nextTick(() => {

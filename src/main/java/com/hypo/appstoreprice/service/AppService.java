@@ -8,9 +8,12 @@ import cn.hutool.core.lang.mutable.MutableObj;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.dtflys.forest.Forest;
 import com.dtflys.forest.http.ForestResponse;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.hypo.appstoreprice.common.BizException;
 import com.hypo.appstoreprice.pojo.bean.Money;
 import com.hypo.appstoreprice.pojo.enums.AreaEnum;
@@ -20,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +33,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -45,11 +45,39 @@ import java.util.stream.Collectors;
 @Service
 public class AppService {
 
+    /**
+     * app 搜索列表缓存
+     */
     private static final Cache<String, List<GetAppListResDTO>> APP_LIST_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
 
+    /**
+     * app 信息缓存
+     */
     private static final Cache<String, List<GetAppInfoResDTO>> APP_INFO_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
 
+    /**
+     * lock pool
+     */
     private static final ConcurrentHashMap<String, Object> LOCK_POOL = new ConcurrentHashMap<>();
+
+    /**
+     * 热门搜索词排行
+     */
+    private static final Multiset<String> POPULAR_SEARCH_WORD = HashMultiset.create();
+
+    /**
+     * get popular search word list
+     *
+     * @return {@link List }<{@link String }>
+     */
+    public List<String> getPopularSearchWordList() {
+        return POPULAR_SEARCH_WORD.entrySet()
+            .stream()
+            .sorted(Comparator.comparingInt(Multiset.Entry<String>::getCount).reversed())
+            .limit(10)
+            .map(Multiset.Entry::getElement)
+            .collect(Collectors.toList());
+    }
 
     /**
      * get app list
@@ -58,6 +86,9 @@ public class AppService {
      * @return {@link List }<{@link GetAppListResDTO }>
      */
     public List<GetAppListResDTO> getAppList(GetAppListReqDTO reqDTO) {
+        // 记录搜索次数
+        POPULAR_SEARCH_WORD.add(reqDTO.getAppName());
+
         // 无锁检查缓存
         String cacheKey = StrUtil.format("{}-{}", reqDTO.getAreaCode(), reqDTO.getAppName());
         List<GetAppListResDTO> appListCache = APP_LIST_CACHE.get(cacheKey);
@@ -146,41 +177,40 @@ public class AppService {
                 GetAppInfoResDTO resDTO = new GetAppInfoResDTO();
                 resDTO.setAppId(appId);
                 resDTO.setArea(areaEnum.getName());
+
+                Element scriptElement = doc.selectFirst("#serialized-server-data");
+                if (Objects.isNull(scriptElement)) {
+                    log.error("appId: {}, area: {}, script element not found", appId, areaEnum.getCode());
+                    return;
+                }
+                JSONObject jsonResult = JSON.parseArray(scriptElement.html().trim()).getJSONObject(0).getJSONObject("data");
                 // 提取应用名称
-                Element appNameElement = doc.selectFirst("h1.product-header__title.app-header__title");
-                String appName = appNameElement != null ? appNameElement.text().trim() : "";
-                // 移除年龄评级标签
-                appName = appName.replaceFirst("\\s*\\d+\\+\\s*$", "").trim();
-                resDTO.setName(appName);
+                resDTO.setName(jsonResult.getString("title"));
                 // 提取副标题
-                Element subTitleElement = doc.selectFirst("h2.product-header__subtitle.app-header__subtitle");
-                String subTitle = subTitleElement != null ? subTitleElement.text().trim() : "";
-                resDTO.setSubTitle(subTitle.replace("\u202A", "").replace("\u202C", ""));
+                resDTO.setSubTitle(jsonResult.getJSONObject("lockup").getString("subTitle"));
                 // 提取开发者信息
-                Element developerElement = doc.selectFirst("h2.product-header__identity.app-header__identity a.link");
-                String developer = developerElement != null ? developerElement.text().trim() : "";
-                resDTO.setDeveloper(developer);
+                resDTO.setDeveloper(jsonResult.getJSONObject("developerAction").getString("title"));
                 resDTO.setAppStoreUrl(appStoreUrl);
                 // 提取价格信息
-                Element priceElement = doc.selectFirst("li.inline-list__item.inline-list__item--bulleted.app-header__list__item--price");
-                String appPriceStr = priceElement != null ? priceElement.text().trim() : "";
-                resDTO.setPrice(parsePrice(appPriceStr, areaEnum));
+                resDTO.setPrice(parsePrice(jsonResult.getJSONObject("lockup").getJSONObject("buttonAction").getString("priceFormatted"), areaEnum));
                 // 查找所有内购列表项
-                Elements items = doc.select("li.list-with-numbers__item");
+                JSONArray inAppPurchaseArray = jsonResult.getJSONObject("shelfMapping").getJSONObject("information").getJSONArray("items")
+                    .toList(JSONObject.class)
+                    .stream()
+                    .filter(item -> areaEnum.getInAppPurchaseStr().equals(item.getString("title")))
+                    .findFirst()
+                    .map(item -> item.getJSONArray("items"))
+                    .map(item -> item.getJSONObject(0))
+                    .map(item -> item.getJSONArray("textPairs"))
+                    .orElse(new JSONArray());
                 // 存储解析结果
                 List<InAppPurchaseDTO> inAppPurchaseList = new ArrayList<>();
-                for (Element item : items) {
-                    // 提取标题（内购项目名）
-                    String object = item.select("span.list-with-numbers__item__title span").text().trim();
-                    // 提取价格
-                    String priceStr = item.select("span.list-with-numbers__item__price").text().trim();
-                    // 组合输出
-                    if (StrUtil.isAllNotBlank(object, priceStr)) {
-                        InAppPurchaseDTO purchaseDTO = new InAppPurchaseDTO();
-                        purchaseDTO.setObject(object);
-                        purchaseDTO.setPrice(parsePrice(priceStr, areaEnum));
-                        inAppPurchaseList.add(purchaseDTO);
-                    }
+                for (int i = 0; i < inAppPurchaseArray.size(); i++) {
+                    JSONArray jsonArray = inAppPurchaseArray.getJSONArray(i);
+                    InAppPurchaseDTO purchaseDTO = new InAppPurchaseDTO();
+                    purchaseDTO.setObject(jsonArray.getString(0));
+                    purchaseDTO.setPrice(parsePrice(jsonArray.getString(1), areaEnum));
+                    inAppPurchaseList.add(purchaseDTO);
                 }
                 resDTO.setInAppPurchaseList(inAppPurchaseList);
                 resultList.get().add(resDTO);
@@ -207,7 +237,7 @@ public class AppService {
      * @return {@link Money }
      */
     private Money parsePrice(String priceStr, AreaEnum areaEnum) {
-        if (StrUtil.isBlank(priceStr) || StrUtil.equalsAnyIgnoreCase(priceStr, "免费", "免費", "Free", "無料", "무료", "Gratuit", "Grátis")) {
+        if (StrUtil.isBlank(priceStr)) {
             return new Money(areaEnum.getCurrencyCode(), BigDecimal.ZERO);
         }
         priceStr = priceStr.replace(areaEnum.getThousandsSeparator(), StrUtil.EMPTY);
