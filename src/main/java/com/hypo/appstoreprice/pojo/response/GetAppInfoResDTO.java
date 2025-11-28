@@ -25,6 +25,11 @@ public class GetAppInfoResDTO {
     private String area;
 
     /**
+     * area name
+     */
+    private String areaName;
+
+    /**
      * name
      */
     private String name;

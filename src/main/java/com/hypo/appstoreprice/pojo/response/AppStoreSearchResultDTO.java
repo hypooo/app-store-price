@@ -24,9 +24,9 @@ public class AppStoreSearchResultDTO {
     private String trackName;
 
     /**
-     * artwork url100
+     * artwork url512
      */
-    private String artworkUrl100;
+    private String artworkUrl512;
 
     /**
      * description

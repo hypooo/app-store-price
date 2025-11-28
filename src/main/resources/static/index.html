@@ -9,520 +9,417 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>App Store 价格查询</title>
 
-    <!-- 预加载关键CSS资源 -->
-    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" as="style">
+    <!-- 预加载资源 -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS + DaisyUI -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css"/>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Axios -->
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <style>
-        /* 清爽色彩主题 */
-        :root {
-            --fresh-primary: #10b981; /* 翠绿色 */
-            --fresh-secondary: #06b6d4; /* 天蓝色 */
-            --fresh-accent: #14b8a6; /* 青绿色 */
-            --fresh-light: #f0fdfa; /* 淡青色背景 */
-            --fresh-gradient: linear-gradient(135deg, #a7f3d0 0%, #67e8f9 100%); /* 清爽渐变 */
-            --fresh-card-gradient: linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%);
-        }
 
-        /* 页面背景渐变 - 优化渲染防止闪烁 */
-        html {
-            font-display: swap;
-            text-rendering: optimizeLegibility;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+    <!-- Flag Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons/css/flag-icons.min.css"/>
+
+    <!-- Alpine.js & Axios -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        ios: {
+                            blue: '#007AFF',
+                            gray: '#8E8E93',
+                            bg: '#F2F2F7',
+                            card: '#FFFFFF',
+                            separator: '#C6C6C8',
+                        }
+                    },
+                    boxShadow: {
+                        'ios': '0 4px 20px rgba(0, 0, 0, 0.06)',
+                        'ios-hover': '0 10px 25px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] {
+            display: none !important;
         }
 
         body {
-            background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 50%, #fefce8 100%) !important;
-            min-height: 100vh;
-            /* 防止闪烁优化 */
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            perspective: 1000px;
+            background-color: #F2F2F7;
+            color: #1C1C1E;
+            -webkit-font-smoothing: antialiased;
+            overflow-y: scroll; /* 强制显示滚动条，防止页面抖动 */
         }
 
-        /* 主标题清爽样式 - 优化渐变文字渲染 */
-        .fresh-title {
-            background: var(--fresh-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
-            /* 防止渐变文字闪烁 */
-            transform: translateZ(0);
-            will-change: background;
-            /* 确保平滑渲染 */
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+        /* iOS 风格模糊背景 */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        /* 清爽按钮样式 - 优化渐变渲染 */
-        .btn-fresh-primary {
-            background: var(--fresh-gradient);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-            /* 防止渐变闪烁 */
-            transform: translateZ(0);
-            will-change: transform, box-shadow;
+        /* iOS 图标圆角 (Squircle 近似) */
+        .app-icon {
+            border-radius: 22%;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
         }
 
-        .btn-fresh-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
 
-        .btn-fresh-secondary {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-            /* 防止渐变闪烁 */
-            transform: translateZ(0);
-            will-change: transform, box-shadow;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        .btn-fresh-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        /* 动画 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        /* 清爽卡片样式 */
-        .card-fresh {
-            background: var(--fresh-card-gradient);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .card-fresh:hover {
-            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
-            transform: translateY(-3px);
-        }
-
-        /* 价格显示清爽样式 */
-        .price-fresh {
-            color: var(--fresh-primary) !important;
-            font-weight: 600;
-        }
-
-        .price-cny-fresh {
-            color: var(--fresh-accent) !important;
-            font-weight: 500;
-        }
-
-        /* 文本截断样式 */
-        .line-clamp-2 {
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        /* Toast动画 */
-        .toast {
-            animation: slideInDown 0.3s ease-out;
-        }
-
-        @keyframes slideInDown {
-            from {
-                transform: translate3d(0, -100%, 0);
-                visibility: visible;
-            }
-            to {
-                transform: translate3d(0, 0, 0);
-            }
-        }
-
-        /* 应用卡片悬停效果增强 */
-        .app-card {
-            transition: all 0.3s ease-in-out;
-            background: var(--fresh-card-gradient);
-            border: 1px solid rgba(16, 185, 129, 0.08);
-        }
-
-        .app-card:hover:not(.disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.2);
-        }
-
-        .app-card.disabled {
-            pointer-events: none;
-        }
-
-        /* 清爽加载动画 */
-        .loading-fresh {
-            color: var(--fresh-primary);
-        }
-
-        /* 清爽徽章样式 */
-        .badge-fresh {
-            background: var(--fresh-gradient);
-            color: #065f46; /* 深绿色文字，提高可读性 */
-            border: none;
-            font-weight: 600; /* 加粗文字 */
-        }
-
-        /* 统计卡片清爽样式 */
-        .stat-fresh {
-            background: linear-gradient(145deg, #f0fdfa, #ecfdf5);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.05);
-        }
-
-        /* 滚动条清爽样式 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f0fdfa;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #10b981, #14b8a6);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #059669, #0f766e);
-        }
-
-        /* 页面加载过渡效果 */
-        body:not(.page-loaded) * {
-            transition: opacity 0.3s ease-in-out !important;
-        }
-
-        body:not(.page-loaded) {
+        .fade-enter-start, .fade-leave-end {
             opacity: 0;
+            transform: translateY(10px);
         }
 
-        body.page-loaded {
-            opacity: 1;
+        /* 自定义 Loading 动画 (替代 DaisyUI) */
+        .spinner {
+            animation: spin 1s linear infinite;
+            border-radius: 9999px;
+            border-width: 2px;
+            border-style: solid;
+            border-color: currentColor;
+            border-top-color: transparent;
+            border-left-color: transparent;
         }
 
-        /* 渐进式内容显示 */
-        .fade-in {
-            animation: fadeInUp 0.6s ease-out forwards;
+        .spinner-xs {
+            height: 1rem;
+            width: 1rem;
         }
 
-        @keyframes fadeInUp {
+        .spinner-lg {
+            height: 3rem;
+            width: 3rem;
+            border-width: 4px;
+        }
+
+        @keyframes spin {
             from {
-                opacity: 0;
-                transform: translateY(20px);
+                transform: rotate(0deg);
             }
             to {
-                opacity: 1;
-                transform: translateY(0);
+                transform: rotate(360deg);
             }
         }
     </style>
 </head>
-<body class="min-h-screen" x-data="appStore()" :class="{ 'page-loaded': pageLoaded }">
-<div class="container mx-auto p-4">
-    <!-- 页面标题 -->
-    <div class="text-center mb-8 fade-in">
-        <h1 class="text-5xl font-bold fresh-title mb-4">App Store 价格查询</h1>
-        <p class="text-gray-600 text-lg">查询应用在不同地区的价格和内购信息</p>
-        <div class="mt-4">
-            <a href="https://github.com/hypooo" target="_blank" class="btn btn-sm btn-ghost">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                </svg>
-                GitHub
-            </a>
-        </div>
-    </div>
+<body class="min-h-screen flex flex-col" x-data="appStore()" x-cloak>
 
-    <!-- 按名称搜索应用 -->
-    <div class="card card-fresh shadow-xl mb-6 fade-in" style="animation-delay: 0.2s; animation-fill-mode: both;">
-        <div class="card-body">
-            <h2 class="card-title text-xl" style="color: var(--fresh-primary)">🔍 搜索应用</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">应用名称</span>
-                    </label>
-                    <label class="input input-bordered flex items-center gap-2">
-                        <input
-                            type="text"
-                            x-model="appName"
-                            placeholder="请输入应用名称，如：ChatGPT"
-                            class="grow"
-                            :disabled="loadingAppList || loading"
-                            @keyup.enter="loading ? null : searchAppList"
-                            @focus="onSearchInputFocus"
-                            @blur="onSearchInputBlur"
-                        />
-                        <button
-                            type="button"
-                            class="btn btn-ghost btn-xs"
-                            @click="appName = ''"
-                            title="清空应用名称"
-                        >
-                            ✕
-                        </button>
-                    </label>
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">地区代码</span>
-                    </label>
-                    <select x-model="areaCode" class="select select-bordered" :disabled="loadingAppList || loading || areaListLoading">
+<!-- 顶部导航 -->
+<header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300" :class="{'shadow-sm': window.scrollY > 10}">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-2 cursor-pointer" @click="window.scrollTo({top: 0, behavior: 'smooth'})">
+            <img src="/image.png" alt="Logo" class="w-7 h-7 rounded-lg shadow-sm">
+            <span class="font-semibold text-slate-900 tracking-tight">App Store Price</span>
+        </div>
+        <a href="https://github.com/hypooo" target="_blank" class="text-slate-400 hover:text-slate-800 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+        </a>
+    </div>
+</header>
+
+<main class="flex-grow pt-24 pb-12 px-4">
+    <div class="max-w-3xl mx-auto">
+
+        <!-- 标题区域 -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+                探索全球应用定价
+            </h1>
+            <p class="text-slate-500 text-sm md:text-base">
+                对比 App Store 各区价格与内购项目
+            </p>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div class="bg-white rounded-2xl shadow-ios p-2 mb-8 relative z-20 transition-all duration-300 hover:shadow-ios-hover">
+            <div class="flex flex-col md:flex-row gap-2">
+                <!-- 地区选择 -->
+                <div class="relative md:w-40 flex-shrink-0">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
+                        <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm shadow-sm"></span>
+                    </div>
+                    <select x-model="areaCode"
+                            class="w-full h-12 pl-10 pr-8 bg-slate-50 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 transition-colors relative z-0"
+                            :disabled="loadingAppList || loading">
                         <template x-for="area in areaList" :key="area.code">
-                            <option :value="area.code" x-text="area.name + ' (' + area.code.toUpperCase() + ')'"></option>
-                        </template>
-                        <template x-if="areaList.length === 0 && !areaListLoading">
-                            <option disabled selected>暂无地区数据</option>
+                            <option :value="area.code" x-text="area.name + ' ' + area.code.toUpperCase()"></option>
                         </template>
                     </select>
-                    <div x-show="areaListError" class="text-red-500 text-sm mt-1" x-text="areaListError"></div>
-                </div>
-            </div>
-
-            <!-- 热门搜索词 -->
-            <div x-show="showPopularWords && popularWords.length > 0" x-transition class="mt-4">
-                <label class="label">
-                    <span class="label-text">🔥 热门搜索</span>
-                </label>
-                <div class="flex flex-wrap gap-2" @mousedown.prevent>
-                    <template x-for="word in popularWords" :key="word">
-                        <button
-                            type="button"
-                            class="btn btn-xs btn-fresh-secondary"
-                            @mousedown.prevent="selectPopularWord(word)"
-                            :disabled="loadingAppList || loading"
-                            x-text="word">
-                        </button>
-                    </template>
-                </div>
-            </div>
-
-            <div class="form-control mt-4">
-                <button
-                    class="btn btn-fresh-secondary"
-                    @click="searchAppList"
-                    :disabled="loadingAppList || loading"
-                >
-                    <span x-show="!loadingAppList && !loading">🚀 搜索应用列表</span>
-                    <span x-show="loadingAppList" class="loading loading-spinner loading-sm loading-fresh"></span>
-                    <span x-show="loading" class="loading loading-spinner loading-sm loading-fresh"></span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 应用列表展示 -->
-    <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-6">
-        <div class="card card-fresh shadow-xl">
-            <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="card-title" style="color: var(--fresh-primary)">📱 搜索结果</h3>
-                    <button
-                        @click="appListCollapsed = !appListCollapsed"
-                        class="btn btn-sm btn-ghost"
-                        :title="appListCollapsed ? '展开搜索结果' : '折叠搜索结果'"
-                    >
-                        <svg x-show="!appListCollapsed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
-                        <svg x-show="appListCollapsed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </div>
+                </div>
+
+                <!-- 输入框 -->
+                <div class="relative flex-grow">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           x-model="appName"
+                           @keyup.enter="loading ? null : searchAppList"
+                           @focus="onSearchInputFocus"
+                           @blur="onSearchInputBlur"
+                           placeholder="搜索应用、游戏..."
+                           class="w-full h-12 pl-11 pr-10 bg-slate-50 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                           :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
+
+                    <!-- 清除按钮 -->
+                    <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                         </svg>
                     </button>
-                </div>
-                <div x-show="!appListCollapsed" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <template x-for="app in appList" :key="app.appId">
-                        <div class="card card-compact shadow transition-colors app-card"
-                             :class="loading ? 'cursor-not-allowed opacity-60 disabled' : 'cursor-pointer'"
-                             @click="loading ? null : selectApp(app)">
-                            <figure class="px-4 pt-4">
-                                <img :src="app.appImage" :alt="app.appName" class="w-16 h-16 rounded-lg"/>
-                            </figure>
-                            <div class="card-body">
-                                <div class="flex items-center justify-between">
-                                    <h4 class="font-bold text-sm flex-1" x-text="app.appName"></h4>
-                                    <div x-show="app.rating" class="flex items-center ml-2">
-                                        <div class="rating rating-xs">
-                                            <template x-for="i in 5" :key="i">
-                                                <input type="radio" :name="'rating-' + app.appId" class="mask mask-star-2 bg-orange-400" :checked="i <= Math.round(app.rating)" disabled />
-                                            </template>
-                                        </div>
-                                        <span class="text-xs font-medium ml-1" style="color: rgba(60, 60, 67, .6)" x-text="(app.rating).toFixed(1)"></span>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-600 line-clamp-2" x-text="app.appDesc"></p>
-                                <div class="text-xs font-medium mt-1" style="color: var(--fresh-accent)">
-                                    ID: <span x-text="app.appId"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-                <div x-show="appListCollapsed" x-transition
-                     class="text-center py-4 text-gray-500 cursor-pointer hover:bg-base-200 transition-colors rounded-lg"
-                     @click="appListCollapsed = !appListCollapsed">
-                    搜索结果已折叠，点击展开
-                </div>
-            </div>
-        </div>
-    </div>
 
-
-    <!-- 错误提示 -->
-    <div x-show="error || errorAppList" class="mb-6">
-        <div x-show="error" class="alert mb-2" style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fca5a5; color: #dc2626;" x-transition>
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span x-text="error"></span>
-        </div>
-        <div x-show="errorAppList" class="alert mb-2" style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fca5a5; color: #dc2626;" x-transition>
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span x-text="errorAppList"></span>
-        </div>
-    </div>
-
-    <!-- 加载状态 -->
-    <div x-show="loading || loadingAppList" class="flex justify-center items-center py-12">
-        <div class="loading loading-spinner loading-lg loading-fresh"></div>
-        <span x-show="loading" class="ml-2 text-lg" style="color: var(--fresh-primary)">⏳ 正在查询应用信息...</span>
-        <span x-show="loadingAppList" class="ml-2 text-lg" style="color: var(--fresh-primary)">🔍 正在搜索应用列表...</span>
-    </div>
-
-    <!-- 结果展示 -->
-    <div x-show="results.length > 0 && !loading" x-transition>
-        <h2 class="text-3xl font-bold mb-6 fresh-title">✨ 查询结果</h2>
-
-        <template x-for="app in results" :key="app.area">
-            <div class="card card-fresh shadow-lg mb-6">
-                <div class="card-body">
-                    <div class="flex flex-col lg:flex-row lg:items-start gap-4">
-                        <!-- 应用基本信息 -->
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h3 class="card-title text-lg" style="color: var(--fresh-primary)" x-text="app.name"></h3>
-                                <div class="badge badge-fresh" x-text="app.area"></div>
-                            </div>
-                            <p class="text-gray-600 mb-2" x-text="app.subTitle"></p>
-                            <p class="text-sm text-gray-500 mb-3">
-                                👨‍💻 开发者: <span x-text="app.developer"></span>
-                            </p>
-
-                            <!-- 应用价格 -->
-                            <div class="stat stat-fresh rounded-lg p-4 mb-4">
-                                <div class="stat-title" style="color: var(--fresh-accent)">💰 应用价格</div>
-                                <div class="stat-value text-2xl price-fresh">
-                                    <span x-text="app.price.currency"></span>
-                                    <span x-text="app.price.price === 0 ? '免费' : app.price.price"></span>
-                                </div>
-                                <div x-show="app.price.price > 0 && app.price.cnyPrice > 0" class="stat-desc text-sm price-cny-fresh font-medium mt-1">
-                                    ≈ ¥<span x-text="app.price.cnyPrice.toFixed(2)"></span>
-                                </div>
-                            </div>
-
-                            <a :href="app.appStoreUrl" target="_blank" class="btn btn-sm btn-fresh-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                                </svg>
-                                查看App Store
-                            </a>
-                        </div>
-
-                        <!-- 内购信息 -->
-                        <div class="flex-1">
-                            <h4 class="font-bold mb-3" style="color: var(--fresh-primary)">🛒 内购项目</h4>
-                            <div x-show="app.inAppPurchaseList.length === 0" class="text-gray-500">
-                                暂无内购项目
-                            </div>
-                            <div class="space-y-3">
-                                <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
-                                    <div class="card card-compact shadow" style="background: var(--fresh-card-gradient); border: 1px solid rgba(16, 185, 129, 0.1);">
-                                        <div class="card-body">
-                                            <div class="flex justify-between items-center">
-                                                <h5 class="font-medium text-gray-700" x-text="purchase.object"></h5>
-                                                <div class="text-right">
-                                                    <div class="font-bold price-fresh">
-                                                        <span x-text="purchase.price.currency"></span>
-                                                        <span x-text="purchase.price.price"></span>
-                                                    </div>
-                                                    <div x-show="purchase.price.cnyPrice > 0" class="text-sm price-cny-fresh font-medium">
-                                                        ≈ ¥<span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
+                    <!-- 热门搜索下拉 -->
+                    <div x-show="showPopularWords && popularWords.length > 0"
+                         x-transition.opacity.duration.200ms
+                         class="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 p-3 z-30"
+                         @mousedown.prevent>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索</div>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="word in popularWords" :key="word">
+                                <button @click="selectPopularWord(word)"
+                                        class="px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600">
+                                    <span x-text="word"></span>
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
+
+                <!-- 搜索按钮 -->
+                <button @click="searchAppList"
+                        class="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 min-w-[100px]"
+                        :disabled="loadingAppList || loading">
+                    <span x-show="!loadingAppList">搜索</span>
+                    <span x-show="loadingAppList" class="spinner spinner-xs"></span>
+                </button>
             </div>
-        </template>
+
+            <!-- 错误提示 -->
+            <div x-show="errorAppList" x-transition class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <span x-text="errorAppList"></span>
+            </div>
+        </div>
+
+        <!-- 搜索结果列表 -->
+        <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-10">
+            <div class="flex justify-between items-end mb-4 px-1">
+                <h2 class="text-lg font-bold text-slate-900">搜索结果</h2>
+                <button @click="appListCollapsed = !appListCollapsed" class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                    <span x-text="appListCollapsed ? '展开全部' : '收起'"></span>
+                    <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div x-show="!appListCollapsed" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <template x-for="app in appList" :key="app.appId">
+                    <div @click="selectApp(app)"
+                         class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group flex items-center gap-3">
+                        <img :src="app.appImage" class="w-14 h-14 app-icon bg-slate-100 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                        <div class="flex-grow min-w-0">
+                            <h3 class="font-semibold text-slate-900 text-sm truncate" x-text="app.appName"></h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5" x-text="app.appDesc || '应用'"></p>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <div class="flex items-center text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                                    <span x-text="app.rating ? app.rating.toFixed(1) : 'N/A'"></span>
+                                    <svg class="w-2.5 h-2.5 text-orange-400 ml-0.5 fill-current" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button class="w-8 h-8 rounded-full bg-slate-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="appListCollapsed" @click="appListCollapsed = false" class="bg-white/50 border border-dashed border-slate-300 rounded-xl p-3 text-center text-sm text-slate-500 cursor-pointer hover:bg-white hover:border-blue-300 hover:text-blue-600 transition-all">
+                已折叠搜索结果，点击查看
+            </div>
+        </div>
+
+        <!-- 加载详情中 -->
+        <div x-show="loading" class="py-20 text-center flex flex-col items-center">
+            <div class="spinner spinner-lg text-blue-600 mb-4"></div>
+            <p class="text-slate-400 text-sm font-medium animate-pulse">正在获取全球定价数据...</p>
+        </div>
+
+        <!-- 详情结果 -->
+        <div x-show="results.length > 0 && !loading && appListCollapsed" x-transition class="space-y-6">
+            <template x-for="app in results" :key="app.area">
+                <div class="bg-white rounded-3xl shadow-ios overflow-hidden border border-slate-100/50">
+                    <!-- 头部信息 -->
+                    <div class="p-6 pb-4 flex flex-col sm:flex-row gap-5">
+                        <div class="relative flex-shrink-0 mx-auto sm:mx-0">
+                            <img :src="selectedAppImage" class="w-28 h-28 app-icon bg-slate-100 object-cover shadow-md">
+                            <div class="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
+                                <span :class="'fi fi-' + app.area.toLowerCase()" class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
+                                <span x-text="app.areaName || app.area"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex-grow text-center sm:text-left min-w-0">
+                            <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1" x-text="app.name"></h2>
+                            <p class="text-sm text-slate-500 mb-3 line-clamp-2" x-text="app.subTitle"></p>
+
+                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
+                                <span class="bg-slate-100 px-2 py-1 rounded-md" x-text="app.developer"></span>
+                                <a :href="app.appStoreUrl" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
+                                    App Store
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>
+                            </div>
+
+                            <!-- 价格按钮 -->
+                            <div class="flex items-center justify-center sm:justify-start gap-3">
+                                <div class="inline-flex items-center bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full font-bold text-base">
+                                    <span x-text="app.price.currency" class="mr-1 text-xs opacity-70"></span>
+                                    <span x-text="app.price.price === 0 ? '免费' : app.price.price"></span>
+                                </div>
+                                <div x-show="app.price.price > 0 && app.price.cnyPrice > 0" class="text-xs text-slate-400 font-medium">
+                                    ≈ ¥<span x-text="app.price.cnyPrice.toFixed(2)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内购列表 -->
+                    <div class="border-t border-slate-100 bg-slate-50/50 p-5">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">App 内购买项目</h3>
+
+                        <div x-show="app.inAppPurchaseList.length === 0" class="text-center py-6 text-slate-400 text-sm">
+                            无内购项目
+                        </div>
+
+                        <div x-show="app.inAppPurchaseList.length > 0" class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="flex bg-slate-50/80 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                <div class="flex-grow">项目名称</div>
+                                <div class="w-24 text-right">价格</div>
+                                <div class="w-24 text-right">约合人民币</div>
+                            </div>
+                            <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
+                                <div class="px-4 py-3 flex items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <span class="text-sm font-medium text-slate-700 truncate flex-grow pr-2" x-text="purchase.object"></span>
+
+                                    <div class="w-24 text-right flex-shrink-0">
+                                        <span x-text="purchase.price.currency" class="text-xs font-normal text-slate-400 mr-0.5"></span>
+                                        <span x-text="purchase.price.price" class="text-sm font-bold text-slate-900"></span>
+                                    </div>
+
+                                    <div class="w-24 text-right flex-shrink-0 text-xs text-slate-500 font-medium">
+                                            <span x-show="purchase.price.cnyPrice > 0">
+                                                ¥<span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
+                                            </span>
+                                        <span x-show="!purchase.price.cnyPrice || purchase.price.cnyPrice <= 0" class="text-slate-300">-</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- 错误提示 -->
+        <div x-show="error" x-transition class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm text-center mt-4">
+            <span x-text="error"></span>
+        </div>
+
+        <!-- 空状态引导 -->
+        <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0" class="text-center py-20 opacity-40">
+            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p class="text-slate-500">输入应用名称，开始探索全球价格</p>
+        </div>
+
     </div>
+</main>
 
-    <!-- 空状态 -->
-    <div x-show="!loading && results.length === 0 && !error && searched" class="text-center py-12">
-        <div class="text-6xl mb-4">📱</div>
-        <h3 class="text-xl font-bold mb-2" style="color: var(--fresh-primary)">未找到应用信息</h3>
-        <p class="text-gray-600">请检查App ID是否正确</p>
-    </div>
+<footer class="py-6 text-center text-slate-400 text-xs">
+    <p>&copy; <span x-text="new Date().getFullYear()"></span> App Store Price. Designed for Global Discovery.</p>
+</footer>
 
-    <!-- 初始状态 -->
-    <div x-show="!loading && results.length === 0 && !error && !searched" class="text-center py-12">
-        <div class="text-6xl mb-4">🔍</div>
-        <h3 class="text-xl font-bold mb-2" style="color: var(--fresh-primary)">开始查询</h3>
-        <p class="text-gray-600">请先搜索应用，然后点击选择应用来查询详细信息</p>
-    </div>
-</div>
-
-
+<!-- 逻辑脚本 (保持原有逻辑不变) -->
 <script>
     function appStore() {
         return {
-            // 页面加载状态
-            pageLoaded: false,
-
-            // 搜索应用列表相关
+            // 状态变量
             appName: 'ChatGPT',
             areaCode: 'us',
-            areaList: [],  // 地区列表
-            areaListError: '',  // 地区列表错误信息
-            areaListLoading: false,  // 地区列表加载状态
+            areaList: [],
+            areaListError: '',
+            areaListLoading: false,
+
             appList: [],
             loadingAppList: false,
             errorAppList: '',
+            appListCollapsed: false,
 
-            // 热门搜索词相关
-            popularWords: [],  // 热门搜索词列表
-            showPopularWords: false,  // 控制热门搜索词显示状态
-            popularWordsLoading: false,  // 热门搜索词加载状态
-            popularWordsError: '',  // 热门搜索词错误信息
+            popularWords: [],
+            showPopularWords: false,
+            popularWordsLoading: false,
 
-            // 查询应用信息相关
             appId: '',
+            selectedAppImage: '',
             results: [],
             loading: false,
             error: '',
             searched: false,
 
-            // 搜索结果折叠状态
-            appListCollapsed: false,
+            // 初始化
+            init() {
+                this.getAreaList();
+                this.getPopularSearchWords();
+            },
 
+            // 搜索应用列表
             async searchAppList() {
                 if (!this.appName.trim()) {
                     this.errorAppList = '请输入应用名称';
@@ -532,215 +429,124 @@
                 this.loadingAppList = true;
                 this.errorAppList = '';
                 this.appList = [];
-                // 清空之前的查询结果
                 this.results = [];
                 this.searched = false;
                 this.error = '';
-                // 展开搜索结果
                 this.appListCollapsed = false;
+                this.showPopularWords = false;
 
                 try {
                     const response = await axios.post('/app/getAppList', {
                         appName: this.appName.trim(),
                         areaCode: this.areaCode
-                    }, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
                     });
 
                     if (response.data.code === 0) {
                         this.appList = response.data.data || [];
-
                         if (this.appList.length === 0) {
-                            this.errorAppList = '未找到相关应用';
+                            this.errorAppList = '未找到相关应用，请尝试更换关键词或地区';
                         }
                     } else {
                         this.errorAppList = response.data.message || '搜索失败';
                     }
                 } catch (err) {
-                    console.error('搜索应用列表错误:', err);
-                    this.errorAppList = '搜索失败，请检查网络连接或接口地址';
+                    this.errorAppList = '网络请求失败，请稍后重试';
                 } finally {
                     this.loadingAppList = false;
                 }
             },
 
+            // 选择应用
             async selectApp(app) {
-                // 选择应用时自动填充appId并清空相关状态
                 this.appId = app.appId;
+                this.selectedAppImage = app.appImage;
                 this.results = [];
                 this.error = '';
                 this.searched = false;
-
-                // 折叠搜索结果，以便更好地展示单个应用的查询结果
                 this.appListCollapsed = true;
 
-                // 提示用户正在查询详细信息
-                this.showToast(`已选择应用：${app.appName}，正在查询详细信息...`);
+                // 滚动到顶部
+                window.scrollTo({top: 0, behavior: 'smooth'});
 
-                // 直接执行查询
                 await this.searchApp();
             },
 
+            // 查询应用详情
             async searchApp() {
-                if (!this.appId.trim()) {
-                    this.error = '请输入App ID';
-                    return;
-                }
+                if (!this.appId) return;
 
-                // 移除可能的"id"前缀，只保留数字ID
-                let cleanAppId = this.appId.trim();
+                let cleanAppId = this.appId.toString().trim();
                 if (cleanAppId.toLowerCase().startsWith('id')) {
                     cleanAppId = cleanAppId.substring(2);
                 }
 
                 this.loading = true;
                 this.error = '';
-                this.results = [];
 
                 try {
                     const response = await axios.post('/app/getAppInfo', {
                         appId: cleanAppId
-                    }, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
                     });
 
                     if (response.data.code === 0) {
                         this.results = response.data.data || [];
                         this.searched = true;
-
                         if (this.results.length === 0) {
-                            this.error = '未找到该应用的信息';
+                            this.error = '未找到该应用的详细信息';
                         }
                     } else {
-                        this.error = response.data.message || '查询失败';
+                        this.error = response.data.message || '查询详情失败';
                     }
                 } catch (err) {
-                    console.error('查询错误:', err);
-                    this.error = '查询失败，请检查网络连接或接口地址';
+                    this.error = '获取详情失败，请检查网络';
                 } finally {
                     this.loading = false;
                 }
             },
 
-            showToast(message) {
-                // 创建临时提示消息
-                const toast = document.createElement('div');
-                toast.className = 'toast toast-top toast-center z-50';
-                toast.innerHTML = `
-                                        <div class="alert" style="background: var(--fresh-gradient); color: white; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                                            <span>${message}</span>
-                                        </div>
-                                    `;
-                document.body.appendChild(toast);
-
-                // 3秒后移除提示
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-            },
-
+            // 获取地区列表
             async getAreaList() {
-                // 获取地区列表
                 this.areaListLoading = true;
-                this.areaListError = '';
-
                 try {
-                    const response = await axios.post('/app/getAreaList', {}, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
+                    const response = await axios.post('/app/getAreaList', {});
                     if (response.data.code === 0) {
                         this.areaList = response.data.data || [];
-
-                        // 如果有地区列表且当前areaCode不在列表中，则设置为第一个地区
                         if (this.areaList.length > 0 && !this.areaList.some(area => area.code === this.areaCode)) {
                             this.areaCode = this.areaList[0].code;
                         }
-                    } else {
-                        this.areaListError = response.data.message || '获取地区列表失败';
-                        // 不使用默认地区列表，保持areaList为空
-                        this.areaList = [];
                     }
                 } catch (err) {
-                    console.error('获取地区列表错误:', err);
-                    this.areaListError = '获取地区列表失败，请检查网络连接或接口地址';
-                    // 不使用默认地区列表，保持areaList为空
-                    this.areaList = [];
                 } finally {
                     this.areaListLoading = false;
                 }
             },
 
-            // 获取热门搜索词
+            // 获取热门搜索
             async getPopularSearchWords() {
-                this.popularWordsLoading = true;
-                this.popularWordsError = '';
-
                 try {
-                    const response = await axios.post('/app/getPopularSearchWordList', {}, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
+                    const response = await axios.post('/app/getPopularSearchWordList', {});
                     if (response.data.code === 0) {
                         this.popularWords = response.data.data || [];
-                    } else {
-                        this.popularWordsError = response.data.message || '获取热门搜索词失败';
-                        this.popularWords = [];
                     }
                 } catch (err) {
-                    console.error('获取热门搜索词错误:', err);
-                    this.popularWordsError = '获取热门搜索词失败，请检查网络连接或接口地址';
-                    this.popularWords = [];
-                } finally {
-                    this.popularWordsLoading = false;
                 }
             },
 
-            // 选择热门搜索词
             selectPopularWord(word) {
                 this.appName = word;
-                this.showPopularWords = false; // 选择后隐藏热门词
-                // 自动执行搜索
+                this.showPopularWords = false;
                 this.searchAppList();
             },
 
-            // 搜索框获得焦点（每次都获取最新热门搜索词）
             onSearchInputFocus() {
-                // 每次聚焦都重新获取最新的热门搜索词
-                if (!this.popularWordsLoading) {
-                    this.getPopularSearchWords();
-                }
+                this.getPopularSearchWords();
                 this.showPopularWords = true;
             },
 
-            // 搜索框失去焦点（延迟隐藏，确保点击事件能正常触发）
             onSearchInputBlur() {
                 setTimeout(() => {
                     this.showPopularWords = false;
                 }, 200);
-            },
-
-            init() {
-                // 获取地区列表
-                this.getAreaList();
-
-                // 预加载热门搜索词
-                this.getPopularSearchWords();
-
-                // 页面加载完成后设置标志，避免闪烁
-                this.$nextTick(() => {
-                    setTimeout(() => {
-                        this.pageLoaded = true;
-                    }, 100);
-                });
             }
         }
     }

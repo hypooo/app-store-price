@@ -120,7 +120,7 @@ public class AppService {
                 GetAppListResDTO dto = new GetAppListResDTO();
                 dto.setAppId(item.getTrackId());
                 dto.setAppName(item.getTrackName());
-                dto.setAppImage(item.getArtworkUrl100());
+                dto.setAppImage(item.getArtworkUrl512());
                 dto.setAppDesc(item.getDescription());
                 dto.setRating(item.getAverageUserRating());
                 return dto;
@@ -176,8 +176,8 @@ public class AppService {
                 // 构造出参
                 GetAppInfoResDTO resDTO = new GetAppInfoResDTO();
                 resDTO.setAppId(appId);
-                resDTO.setArea(areaEnum.getName());
-
+                resDTO.setArea(areaEnum.getCode());
+                resDTO.setAreaName(areaEnum.getName());
                 Element scriptElement = doc.selectFirst("#serialized-server-data");
                 if (Objects.isNull(scriptElement)) {
                     log.error("appId: {}, area: {}, script element not found", appId, areaEnum.getCode());
