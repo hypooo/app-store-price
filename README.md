@@ -36,10 +36,10 @@ App Store Price Tracker 是一个强大的工具，可以查询不同国家/地�
 docker run -d -p 8080:8080 ghcr.io/hypooo/app-store-price:latest
 ```
 
-或使用 docker-compose：
+或使用 Docker Compose：
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 访问 `http://localhost:8080`
