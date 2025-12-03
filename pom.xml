@@ -107,12 +107,4 @@
         </plugins>
     </build>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/hypooo/app-store-price</url>
-        </repository>
-    </distributionManagement>
-
 </project>
