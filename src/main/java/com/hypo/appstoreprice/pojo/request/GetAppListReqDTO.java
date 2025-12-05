@@ -3,6 +3,7 @@ package com.hypo.appstoreprice.pojo.request;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 /**
  * get app list req dto
@@ -23,6 +24,7 @@ public class GetAppListReqDTO {
      * app name
      */
     @NotBlank(message = "appName can not be blank")
+    @Size(max = 20, message = "appName length must be less than or equal to 20")
     private String appName;
 
 }

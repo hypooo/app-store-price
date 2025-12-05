@@ -210,6 +210,7 @@
                            @focus="onSearchInputFocus"
                            @blur="onSearchInputBlur"
                            placeholder="搜索应用、游戏..."
+                           maxlength="20"
                            class="w-full h-12 pl-11 pr-10 bg-slate-50 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                            :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
 
@@ -441,6 +442,11 @@
             async searchAppList() {
                 if (!this.appName.trim()) {
                     this.errorAppList = '请输入应用名称';
+                    return;
+                }
+
+                if (this.appName.trim().length > 20) {
+                    this.errorAppList = '应用名称长度不能超过20个字符';
                     return;
                 }
 
