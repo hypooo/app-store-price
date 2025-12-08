@@ -1,5 +1,5 @@
-# 使用 JDK 8 作为基础镜像
-FROM amazoncorretto:8-alpine
+# 使用 JDK 21 作为基础镜像
+FROM amazoncorretto:21-alpine
 
 # 设置环境变量
 ENV LANG=C.UTF-8

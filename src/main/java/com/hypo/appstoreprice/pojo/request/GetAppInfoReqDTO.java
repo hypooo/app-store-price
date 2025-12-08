@@ -1,8 +1,7 @@
 package com.hypo.appstoreprice.pojo.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-
-import javax.validation.constraints.NotBlank;
 
 /**
  * get app info req dto

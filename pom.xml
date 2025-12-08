@@ -6,15 +6,15 @@
 
     <groupId>com.hypo</groupId>
     <artifactId>app-store-price</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>app-store-price</name>
     <description>Spring Boot Application for App Store Price</description>
 
     <properties>
-        <java.version>1.8</java.version>
-        <spring.boot.version>2.7.18</spring.boot.version>
+        <java.version>21</java.version>
+        <spring.boot.version>3.5.8</spring.boot.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.resources.encoding>UTF-8</maven.resources.encoding>
@@ -61,19 +61,19 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.8.40</version>
+            <version>5.8.42</version>
         </dependency>
 
         <dependency>
             <groupId>com.dtflys.forest</groupId>
-            <artifactId>forest-spring-boot-starter</artifactId>
-            <version>1.7.4</version>
+            <artifactId>forest-spring-boot3-starter</artifactId>
+            <version>1.8.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
-            <version>2.0.58</version>
+            <version>2.0.60</version>
         </dependency>
 
         <dependency>
