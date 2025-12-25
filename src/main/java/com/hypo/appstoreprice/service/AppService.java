@@ -105,33 +105,47 @@ public class AppService {
             if (CollUtil.isNotEmpty(appListCache)) {
                 return appListCache;
             }
-
-            String searchUrl = StrUtil.format("https://itunes.apple.com/search?term={}&country={}&entity=software", StrUtil.trim(reqDTO.getAppName()), reqDTO.getAreaCode());
-            ForestResponse<?> response = Forest.get(searchUrl).execute(ForestResponse.class);
-            if (response.getStatusCode() != HttpStatus.OK.value()) {
-                String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
-                log.error(errorMessage);
-                throw new BizException(errorMessage);
-            }
-
-            JSONObject data = JSON.parseObject(response.readAsString());
-            List<AppStoreSearchResultDTO> searchResultList = data.getList("results", AppStoreSearchResultDTO.class);
-            List<GetAppListResDTO> resultList = new ArrayList<>(searchResultList.stream().map(item -> {
-                GetAppListResDTO dto = new GetAppListResDTO();
-                dto.setAppId(item.getTrackId());
-                dto.setAppName(item.getTrackName());
-                dto.setAppImage(item.getArtworkUrl512());
-                dto.setAppDesc(item.getDescription());
-                dto.setRating(item.getAverageUserRating());
-                return dto;
-            }).collect(Collectors.toMap(
-                GetAppListResDTO::getAppId,
-                Function.identity(),
-                (existingValue, newValue) -> existingValue,
-                LinkedHashMap::new
-            )).values());
-            // 缓存结果
-            APP_LIST_CACHE.put(cacheKey, resultList);
+            List<GetAppListResDTO> resultList = new CopyOnWriteArrayList<>();
+            CollUtil.newArrayList("software", "iPadSoftware", "macSoftware").parallelStream().forEach(entity -> {
+                String searchUrl = StrUtil.format("https://itunes.apple.com/search?term={}&country={}&entity={}", StrUtil.trim(reqDTO.getAppName()), reqDTO.getAreaCode(), entity);
+                ForestResponse<?> response = Forest.get(searchUrl).execute(ForestResponse.class);
+                if (response.getStatusCode() != HttpStatus.OK.value()) {
+                    String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
+                    log.error(errorMessage);
+                    throw new BizException(errorMessage);
+                }
+                JSONObject data = JSON.parseObject(response.readAsString());
+                List<AppStoreSearchResultDTO> entitySearchResultList = data.getList("results", AppStoreSearchResultDTO.class);
+                List<GetAppListResDTO> entityResultList = entitySearchResultList.stream().map(item -> {
+                    GetAppListResDTO dto = new GetAppListResDTO();
+                    dto.setAppId(item.getTrackId());
+                    dto.setAppName(item.getTrackName());
+                    dto.setAppImage(item.getArtworkUrl512());
+                    dto.setAppDesc(item.getDescription());
+                    dto.setRating(item.getAverageUserRating().setScale(1, RoundingMode.HALF_UP));
+                    return dto;
+                }).toList();
+                resultList.addAll(entityResultList);
+            });
+            APP_LIST_CACHE.put(cacheKey, resultList.stream().collect(Collectors.toMap(
+                    GetAppListResDTO::getAppId,
+                    Function.identity(),
+                    (existingValue, newValue) -> existingValue,
+                    LinkedHashMap::new))
+                .values()
+                .stream()
+                .sorted(Comparator.comparingInt(item -> {
+                    if (StrUtil.equalsIgnoreCase(item.getAppName(), reqDTO.getAppName())) {
+                        return 0;
+                    }
+                    if (StrUtil.startWithAnyIgnoreCase(item.getAppName(), reqDTO.getAppName())) {
+                        return 1;
+                    }
+                    if (StrUtil.containsAll(item.getAppName().toLowerCase(), reqDTO.getAppName().toLowerCase().split(StrUtil.EMPTY))) {
+                        return 2;
+                    }
+                    return 3;
+                })).toList());
         }
         return APP_LIST_CACHE.get(cacheKey);
     }

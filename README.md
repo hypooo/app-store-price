@@ -18,7 +18,7 @@ App Store Price Tracker 是一个强大的工具，可以查询不同国家/地�
 
 ## 技术栈
 
-- **后端**: Spring Boot 3.5.8
+- **后端**: Spring Boot 4
 - **编程语言**: Java 21
 - **HTTP 客户端**: Forest
 - **JSON 处理**: Fastjson2
