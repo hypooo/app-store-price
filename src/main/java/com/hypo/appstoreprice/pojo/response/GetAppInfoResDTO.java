@@ -35,9 +35,9 @@ public class GetAppInfoResDTO {
     private String name;
 
     /**
-     * sub title
+     * subtitle
      */
-    private String subTitle;
+    private String subtitle;
 
     /**
      * developer

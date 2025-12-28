@@ -150,7 +150,7 @@
 <!-- 顶部导航 -->
 <header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300" :class="{'shadow-sm': window.scrollY > 10}">
     <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div class="flex items-center gap-2 cursor-pointer" @click="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <div class="flex items-center gap-2">
             <img src="/image.png" alt="Logo" class="w-7 h-7 rounded-lg shadow-sm">
             <span class="font-semibold text-slate-900 tracking-tight">App Store Price</span>
         </div>
@@ -314,9 +314,9 @@
                 <div class="bg-white rounded-3xl shadow-ios overflow-hidden border border-slate-100/50">
                     <!-- 头部信息 -->
                     <div class="p-6 pb-4 flex flex-col sm:flex-row gap-5">
-                        <div class="relative flex-shrink-0 mx-auto sm:mx-0">
-                            <img :src="selectedAppImage" class="w-28 h-28 app-icon bg-slate-100 object-cover shadow-md">
-                            <div class="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
+                        <div class="relative flex-shrink-0 mx-auto sm:mx-0 w-28 h-28">
+                            <img :src="selectedAppImage" class="w-full h-full app-icon bg-slate-100 object-cover shadow-md">
+                            <div class="absolute -bottom-3 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
                                 <span :class="'fi fi-' + app.area.toLowerCase()" class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
                                 <span x-text="app.areaName || app.area"></span>
                             </div>
@@ -324,7 +324,7 @@
 
                         <div class="flex-grow text-center sm:text-left min-w-0">
                             <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1" x-text="app.name"></h2>
-                            <p class="text-sm text-slate-500 mb-3 line-clamp-2" x-text="app.subTitle"></p>
+                            <p class="text-sm text-slate-500 mb-3 line-clamp-2" x-text="app.subtitle"></p>
 
                             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
                                 <span class="bg-slate-100 px-2 py-1 rounded-md" x-text="app.developer"></span>
@@ -365,18 +365,17 @@
                             </div>
                             <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
                                 <div class="px-4 py-3 flex items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                                    <span class="text-sm font-medium text-slate-700 truncate flex-grow pr-2" x-text="purchase.object"></span>
+                                    <span class="text-sm font-medium text-slate-700 flex-grow pr-2 break-words" x-text="purchase.object"></span>
 
                                     <div class="w-24 text-right flex-shrink-0">
                                         <span x-text="purchase.price.currency" class="text-xs font-normal text-slate-400 mr-0.5"></span>
-                                        <span x-text="purchase.price.price" class="text-sm font-bold text-slate-900"></span>
+                                        <span x-text="purchase.price.price.toFixed(2)" class="text-sm font-bold text-slate-900"></span>
                                     </div>
 
                                     <div class="w-24 text-right flex-shrink-0 text-xs text-slate-500 font-medium">
-                                            <span x-show="purchase.price.cnyPrice > 0">
-                                                ¥<span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
+                                            <span>
+                                                ¥ <span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
                                             </span>
-                                        <span x-show="!purchase.price.cnyPrice || purchase.price.cnyPrice <= 0" class="text-slate-300">-</span>
                                     </div>
                                 </div>
                             </template>
@@ -400,6 +399,18 @@
         </div>
 
     </div>
+
+    <!-- 回到顶部按钮 -->
+    <button @click="window.scrollTo({top: 0, behavior: 'smooth'})"
+            x-data="{ show: false }"
+            x-init="window.addEventListener('scroll', () => show = window.scrollY > 600)"
+            x-show="show"
+            x-transition
+            class="fixed bottom-8 right-4 md:right-[calc(50%-384px-4rem)] w-10 h-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:shadow-xl transition-all z-50">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+        </svg>
+    </button>
 </main>
 
 <footer class="py-6 text-center text-slate-400 text-xs">

@@ -199,7 +199,7 @@ public class AppService {
                 // 提取应用名称
                 resDTO.setName(jsonResult.getString("title"));
                 // 提取副标题
-                resDTO.setSubTitle(jsonResult.getJSONObject("lockup").getString("subTitle"));
+                resDTO.setSubtitle(jsonResult.getJSONObject("lockup").getString("subtitle"));
                 // 提取开发者信息
                 resDTO.setDeveloper(jsonResult.getJSONObject("developerAction").getString("title"));
                 resDTO.setAppStoreUrl(appStoreUrl);
