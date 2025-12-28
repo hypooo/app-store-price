@@ -5,9 +5,9 @@ import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.dtflys.forest.Forest;
 import com.hypo.appstoreprice.pojo.enums.AreaEnum;
 import lombok.experimental.UtilityClass;
 
@@ -38,7 +38,7 @@ public class ExchangeRateUtil {
     private Map<String, BigDecimal> getExchangeRateMap(String currencyCode) {
         String cache = RATE_CACHE.get(currencyCode);
         if (StrUtil.isBlank(cache)) {
-            JSONObject result = Forest.get(StrUtil.format("https://open.er-api.com/v6/latest/{}", currencyCode)).execute(JSONObject.class);
+            JSONObject result = JSON.parseObject(HttpUtil.get(StrUtil.format("https://open.er-api.com/v6/latest/{}", currencyCode)));
             RATE_CACHE.put(currencyCode, JSON.toJSONString(result.getJSONObject("rates")));
         }
         Map<String, BigDecimal> resultMap = new HashMap<>();

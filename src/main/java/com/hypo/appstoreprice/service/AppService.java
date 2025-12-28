@@ -7,11 +7,11 @@ import cn.hutool.core.lang.mutable.Mutable;
 import cn.hutool.core.lang.mutable.MutableObj;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.dtflys.forest.Forest;
-import com.dtflys.forest.http.ForestResponse;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.hypo.appstoreprice.common.BizException;
@@ -108,13 +108,13 @@ public class AppService {
             List<GetAppListResDTO> resultList = new CopyOnWriteArrayList<>();
             CollUtil.newArrayList("software", "iPadSoftware", "macSoftware").parallelStream().forEach(entity -> {
                 String searchUrl = StrUtil.format("https://itunes.apple.com/search?term={}&country={}&entity={}", StrUtil.trim(reqDTO.getAppName()), reqDTO.getAreaCode(), entity);
-                ForestResponse<?> response = Forest.get(searchUrl).execute(ForestResponse.class);
-                if (response.getStatusCode() != HttpStatus.OK.value()) {
+                HttpResponse response = HttpUtil.createGet(searchUrl).execute();
+                if (response.getStatus() != HttpStatus.OK.value()) {
                     String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
                     log.error(errorMessage);
                     throw new BizException(errorMessage);
                 }
-                JSONObject data = JSON.parseObject(response.readAsString());
+                JSONObject data = JSON.parseObject(response.body());
                 List<AppStoreSearchResultDTO> entitySearchResultList = data.getList("results", AppStoreSearchResultDTO.class);
                 List<GetAppListResDTO> entityResultList = entitySearchResultList.stream().map(item -> {
                     GetAppListResDTO dto = new GetAppListResDTO();
@@ -175,18 +175,16 @@ public class AppService {
             Mutable<List<GetAppInfoResDTO>> resultList = new MutableObj<>(new CopyOnWriteArrayList<>());
             Arrays.stream(AreaEnum.values()).parallel().forEach(areaEnum -> {
                 String appStoreUrl = StrUtil.format("https://apps.apple.com/{}/app/id{}", areaEnum.getCode(), appId);
-                ForestResponse<?> response = Forest.get(appStoreUrl)
-                    .autoRedirects(true)
-                    .onSuccess(((data, req, res) -> log.info("{}-{}:success", appId, areaEnum.getCode())))
-                    .onError(((ex, req, res) -> log.error("{}-{}:failed", appId, areaEnum.getCode())))
-                    .execute(ForestResponse.class);
-                if (response.getStatusCode() != HttpStatus.OK.value()) {
+                HttpResponse response = HttpUtil.createGet(appStoreUrl, true).execute();
+                if (response.getStatus() != HttpStatus.OK.value()) {
                     log.error("appId: {}, app not found in {} app store", appId, areaEnum.getCode());
+                    log.error("{}-{}:failed", appId, areaEnum.getCode());
                     return;
+                } else {
+                    log.info("{}-{}:success", appId, areaEnum.getCode());
                 }
-                String html = response.readAsString();
-                // 解析HTML
-                Document doc = Jsoup.parse(html);
+                // 解析 HTML
+                Document doc = Jsoup.parse(response.body());
                 // 构造出参
                 GetAppInfoResDTO resDTO = new GetAppInfoResDTO();
                 resDTO.setAppId(appId);

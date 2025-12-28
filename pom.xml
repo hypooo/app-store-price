@@ -6,7 +6,7 @@
 
     <groupId>com.hypo</groupId>
     <artifactId>app-store-price</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
 
     <name>app-store-price</name>
@@ -62,12 +62,6 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.42</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.dtflys.forest</groupId>
-            <artifactId>forest-core</artifactId>
-            <version>1.8.0</version>
         </dependency>
 
         <dependency>
