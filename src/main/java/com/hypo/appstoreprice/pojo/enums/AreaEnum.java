@@ -40,6 +40,8 @@ public enum AreaEnum {
 
     BRAZIL("br", "巴西", "R$", "BRL", StrUtil.DOT, "Compras dentro do app"),
 
+    EGYPT("eg", "埃及", "E£", "EGP", StrUtil.COMMA, "In-App Purchases"),
+
     ;
 
     /**
