@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="免费查询 App Store 应用价格，支持各地区价格对比、内购项目查询、汇率换算。查看 iOS 应用在美区、日区、港区等不同国家的定价差异，帮你找到最优惠的购买地区。">
-    <meta name="keywords" content="App Store 价格查询，App Store 价格监控，App Store 价格对比，苹果应用价格对比，iOS 应用价格，App 内购价格，美区 App 价格，日区 App 价格，港区 App 价格，应用商店价格，全球 App 定价，应用价格换算，苹果商店价格，iPhone 应用价格，iPad 应用价格，Mac 应用价格，应用跨区价格，App 价格差异，Apple Store 价格，iOS 应用内购，应用价格转换，苹果应用商店，App 全球定价，应用价格比较工具，苹果 App 价格">
+    <meta name="description"
+          content="免费查询 App Store 应用价格，支持各地区价格对比、内购项目查询、汇率换算。查看 iOS 应用在美区、日区、港区等不同国家的定价差异，帮你找到最优惠的购买地区。">
+    <meta name="keywords"
+          content="App Store 价格查询，App Store 价格监控，App Store 价格对比，苹果应用价格对比，iOS 应用价格，App 内购价格，美区 App 价格，日区 App 价格，港区 App 价格，应用商店价格，全球 App 定价，应用价格换算，苹果商店价格，iPhone 应用价格，iPad 应用价格，Mac 应用价格，应用跨区价格，App 价格差异，Apple Store 价格，iOS 应用内购，应用价格转换，苹果应用商店，App 全球定价，应用价格比较工具，苹果 App 价格">
     <meta name="robots" content="index, follow">
     <meta name="author" content="App Store Price">
     <meta name="language" content="zh-CN">
@@ -41,6 +44,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -73,7 +77,13 @@
             background-color: #F2F2F7;
             color: #1C1C1E;
             -webkit-font-smoothing: antialiased;
-            overflow-y: scroll; /* 强制显示滚动条，防止页面抖动 */
+            overflow-y: scroll;
+            /* 强制显示滚动条，防止页面抖动 */
+        }
+
+        .dark body {
+            background-color: #1C1C1E;
+            color: #F2F2F7;
         }
 
         /* iOS 风格模糊背景 */
@@ -82,6 +92,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .glass-nav {
+            background: rgba(28, 28, 30, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* iOS 图标圆角 (Squircle 近似) */
@@ -101,11 +116,13 @@
         }
 
         /* 动画 */
-        .fade-enter-active, .fade-leave-active {
+        .fade-enter-active,
+        .fade-leave-active {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        .fade-enter-start, .fade-leave-end {
+        .fade-enter-start,
+        .fade-leave-end {
             opacity: 0;
             transform: translateY(10px);
         }
@@ -119,6 +136,14 @@
             border-color: currentColor;
             border-top-color: transparent;
             border-left-color: transparent;
+        }
+
+        /* 提升暗色模式质感：添加极细的内发光 */
+        .dark .shadow-ios {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+        .dark .app-icon {
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
 
         .spinner-xs {
@@ -136,26 +161,74 @@
             from {
                 transform: rotate(0deg);
             }
+
             to {
                 transform: rotate(360deg);
             }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col" x-data="appStore()" x-cloak>
+
+<body class="min-h-screen flex flex-col dark:bg-[#1C1C1E] dark:text-gray-100" x-data="appStore()" x-cloak>
 
 <!-- 顶部导航 -->
-<header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300" :class="{'shadow-sm': window.scrollY > 10}">
+<header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300"
+        :class="{'shadow-sm': window.scrollY > 10}">
     <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <div class="flex items-center gap-2">
             <img src="/image.png" alt="Logo" class="w-7 h-7 rounded-lg shadow-sm">
-            <span class="font-semibold text-slate-900 tracking-tight">App Store Price</span>
+            <span class="font-semibold text-slate-900 dark:text-white tracking-tight">App Store Price</span>
         </div>
-        <a href="https://github.com/hypooo" target="_blank" class="text-slate-400 hover:text-slate-800 transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-        </a>
+        <div class="flex items-center gap-3">
+            <!-- 颜色模式切换 -->
+            <div class="relative flex items-center" x-data="{ open: false }">
+                <button @click="open = !open" class="w-5 h-5 text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+                    <svg x-cloak x-show="colorMode === 'light'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <svg x-cloak x-show="colorMode === 'dark'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                    <svg x-cloak x-show="colorMode === 'system'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </button>
+                <div x-show="open" @click.away="open = false" x-transition
+                     class="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-slate-200 dark:border-zinc-700 py-1 z-50">
+                    <button @click="setColorMode('system'); open = false"
+                            class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+                            :class="colorMode === 'system' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        跟随系统
+                    </button>
+                    <button @click="setColorMode('light'); open = false"
+                            class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+                            :class="colorMode === 'light' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        浅色模式
+                    </button>
+                    <button @click="setColorMode('dark'); open = false"
+                            class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+                            :class="colorMode === 'dark' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                        深色模式
+                    </button>
+                </div>
+            </div>
+            <a href="https://github.com/hypooo" target="_blank"
+               class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+        </div>
     </div>
 </header>
 
@@ -164,24 +237,26 @@
 
         <!-- 标题区域 -->
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">
                 探索全球应用定价
             </h1>
-            <p class="text-slate-500 text-sm md:text-base">
+            <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base">
                 对比 App Store 各区价格与内购项目
             </p>
         </div>
 
         <!-- 搜索栏 -->
-        <div class="bg-white rounded-2xl shadow-ios p-2 mb-8 relative z-20 transition-all duration-300 hover:shadow-ios-hover">
+        <div
+            class="bg-white dark:bg-zinc-800 rounded-2xl shadow-ios p-2 mb-8 relative z-20 transition-all duration-300 hover:shadow-ios-hover">
             <div class="flex flex-col md:flex-row gap-2">
                 <!-- 地区选择 -->
                 <div class="relative md:w-40 flex-shrink-0">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
+                    <div
+                        class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
                         <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm shadow-sm"></span>
                     </div>
                     <select x-model="areaCode"
-                            class="w-full h-12 pl-10 pr-8 bg-slate-50 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 transition-colors relative z-0"
+                            class="w-full h-12 pl-10 pr-8 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-600 transition-colors relative z-0"
                             :disabled="loadingAppList || loading">
                         <template x-for="area in areaList" :key="area.code">
                             <option :value="area.code" x-text="area.name + ' ' + area.code.toUpperCase()"></option>
@@ -189,7 +264,8 @@
                     </select>
                     <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </div>
                 </div>
@@ -201,34 +277,32 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text"
-                           x-ref="searchInput"
-                           x-model="appName"
-                           @keyup.enter="loading ? null : searchAppList"
-                           @focus="onSearchInputFocus"
-                           @blur="onSearchInputBlur"
-                           placeholder="搜索应用、游戏..."
-                           maxlength="20"
-                           class="w-full h-12 pl-11 pr-10 bg-slate-50 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                    <input type="text" x-ref="searchInput" x-model="appName"
+                           @keyup.enter="loading ? null : searchAppList" @focus="onSearchInputFocus"
+                           @blur="onSearchInputBlur" placeholder="搜索应用、游戏..." maxlength="20"
+                           class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
                            :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
 
                     <!-- 清除按钮 -->
-                    <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
+                    <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            <path fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                  clip-rule="evenodd"></path>
                         </svg>
                     </button>
 
                     <!-- 热门搜索下拉 -->
-                    <div x-show="showPopularWords && popularWords.length > 0"
-                         x-transition.opacity.duration.200ms
-                         class="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 p-3 z-30"
+                    <div x-show="showPopularWords && popularWords.length > 0" x-transition.opacity.duration.200ms
+                         class="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 dark:border-zinc-700/50 p-3 z-30"
                          @mousedown.prevent>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索
+                        </div>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="word in popularWords" :key="word">
                                 <button @click="selectPopularWord(word)"
-                                        class="px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600">
+                                        class="px-3 py-1.5 bg-slate-100 dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600 dark:text-slate-300">
                                     <span x-text="word"></span>
                                 </button>
                             </template>
@@ -248,7 +322,9 @@
             <!-- 错误提示 -->
             <div x-show="errorAppList" x-transition class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"></path>
                 </svg>
                 <span x-text="errorAppList"></span>
             </div>
@@ -257,11 +333,14 @@
         <!-- 搜索结果列表 -->
         <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-10">
             <div class="flex justify-between items-end mb-4 px-1">
-                <h2 class="text-lg font-bold text-slate-900">搜索结果</h2>
-                <button @click="appListCollapsed = !appListCollapsed" class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">搜索结果</h2>
+                <button @click="appListCollapsed = !appListCollapsed"
+                        class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
                     <span x-text="appListCollapsed ? '展开全部' : '收起'"></span>
-                    <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none"
+                         stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -269,24 +348,30 @@
             <div x-show="!appListCollapsed" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <template x-for="app in appList" :key="app.appId">
                     <div @click="selectApp(app)"
-                         class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group flex items-center gap-3">
-                        <img :src="app.appImage" class="w-14 h-14 app-icon bg-slate-100 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                         class="bg-white dark:bg-zinc-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 transition-all cursor-pointer group flex items-center gap-3">
+                        <img :src="app.appImage"
+                             class="w-14 h-14 app-icon bg-slate-100 dark:bg-zinc-700 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <div class="flex-grow min-w-0">
-                            <h3 class="font-semibold text-slate-900 text-sm truncate" x-text="app.appName"></h3>
-                            <p class="text-xs text-slate-500 truncate mt-0.5" x-text="app.appDesc || '应用'"></p>
+                            <h3 class="font-semibold text-slate-900 dark:text-white text-sm truncate" x-text="app.appName"></h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" x-text="app.appDesc || '应用'"></p>
                             <div class="flex items-center gap-2 mt-1.5">
-                                <div class="flex items-center text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
-                                    <svg class="w-2.5 h-2.5 text-orange-400 ml-0.5 fill-current" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                <div
+                                    class="flex items-center text-[10px] text-slate-400 bg-slate-50 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
+                                    <svg class="w-2.5 h-2.5 text-orange-400 ml-0.5 fill-current"
+                                         viewBox="0 0 20 20">
+                                        <path
+                                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
                                     <span x-text="app.rating ? app.rating.toFixed(1) : 'N/A'"></span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex-shrink-0">
-                            <button class="w-8 h-8 rounded-full bg-slate-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                            <button
+                                class="w-8 h-8 rounded-full bg-slate-50 dark:bg-zinc-700 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </button>
                         </div>
@@ -294,7 +379,8 @@
                 </template>
             </div>
 
-            <div x-show="appListCollapsed" @click="appListCollapsed = false" class="bg-white/50 border border-dashed border-slate-300 rounded-xl p-3 text-center text-sm text-slate-500 cursor-pointer hover:bg-white hover:border-blue-300 hover:text-blue-600 transition-all">
+            <div x-show="appListCollapsed" @click="appListCollapsed = false"
+                 class="bg-white/50 dark:bg-zinc-800/50 border border-dashed border-slate-300 dark:border-zinc-600 rounded-xl p-3 text-center text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:border-blue-300 hover:text-blue-600 transition-all">
                 已折叠搜索结果，点击查看
             </div>
         </div>
@@ -308,38 +394,47 @@
         <!-- 详情结果 -->
         <div x-show="results.length > 0 && !loading && appListCollapsed" x-transition class="space-y-6">
             <template x-for="app in results" :key="app.area">
-                <div class="bg-white rounded-3xl shadow-ios overflow-hidden border border-slate-100/50">
+                <div class="bg-white dark:bg-zinc-800/80 rounded-3xl shadow-ios overflow-hidden border border-slate-100/50 dark:border-white/5">
                     <!-- 头部信息 -->
                     <div class="p-6 pb-4 flex flex-col sm:flex-row gap-5">
                         <div class="relative flex-shrink-0 mx-auto sm:mx-0 w-28 h-28">
-                            <img :src="selectedAppImage" class="w-full h-full app-icon bg-slate-100 object-cover shadow-md">
-                            <div class="absolute -bottom-3 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
-                                <span :class="'fi fi-' + app.area.toLowerCase()" class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
+                            <img :src="selectedAppImage"
+                                 class="w-full h-full app-icon bg-slate-100 dark:bg-zinc-700 object-cover shadow-md">
+                            <div
+                                class="absolute -bottom-3 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
+                                    <span :class="'fi fi-' + app.area.toLowerCase()"
+                                          class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
                                 <span x-text="app.areaName || app.area"></span>
                             </div>
                         </div>
 
                         <div class="flex-grow text-center sm:text-left min-w-0">
-                            <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1" x-text="app.name"></h2>
-                            <p class="text-sm text-slate-500 mb-3 line-clamp-2" x-text="app.subtitle"></p>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-1" x-text="app.name"></h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2" x-text="app.subtitle"></p>
 
-                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
-                                <span class="bg-slate-100 px-2 py-1 rounded-md" x-text="app.developer"></span>
-                                <a :href="app.appStoreUrl" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
+                            <div
+                                class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
+                                <span class="bg-slate-100 dark:bg-zinc-700 px-2 py-1 rounded-md" x-text="app.developer"></span>
+                                <a :href="app.appStoreUrl" target="_blank"
+                                   class="text-blue-600 hover:underline flex items-center gap-1">
                                     App Store
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                        </path>
                                     </svg>
                                 </a>
                             </div>
 
                             <!-- 价格按钮 -->
                             <div class="flex items-center justify-center sm:justify-start gap-3">
-                                <div class="inline-flex items-center bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full font-bold text-base">
+                                <div
+                                    class="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-4 py-1.5 rounded-full font-bold text-base">
                                     <span x-text="app.price.currency" class="mr-1 text-xs opacity-70"></span>
                                     <span x-text="app.price.price === 0 ? '免费' : app.price.price"></span>
                                 </div>
-                                <div x-show="app.price.price > 0 && app.price.cnyPrice > 0" class="text-xs text-slate-400 font-medium">
+                                <div x-show="app.price.price > 0 && app.price.cnyPrice > 0"
+                                     class="text-xs text-slate-400 font-medium">
                                     ≈ ¥<span x-text="app.price.cnyPrice.toFixed(2)"></span>
                                 </div>
                             </div>
@@ -347,29 +442,37 @@
                     </div>
 
                     <!-- 内购列表 -->
-                    <div class="border-t border-slate-100 bg-slate-50/50 p-5">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">App 内购买项目</h3>
+                    <div class="border-t border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/50 p-5">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">App 内购买项目
+                        </h3>
 
-                        <div x-show="app.inAppPurchaseList.length === 0" class="text-center py-6 text-slate-400 text-sm">
+                        <div x-show="app.inAppPurchaseList.length === 0"
+                             class="text-center py-6 text-slate-400 text-sm">
                             无内购项目
                         </div>
 
-                        <div x-show="app.inAppPurchaseList.length > 0" class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="flex bg-slate-50/80 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                        <div x-show="app.inAppPurchaseList.length > 0"
+                             class="bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 overflow-hidden shadow-sm">
+                            <div
+                                class="flex bg-slate-50/80 dark:bg-zinc-700/50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-zinc-700">
                                 <div class="flex-grow">项目名称</div>
                                 <div class="w-24 text-right">价格</div>
                                 <div class="w-24 text-right">约合人民币</div>
                             </div>
                             <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
-                                <div class="px-4 py-3 flex items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                                    <span class="text-sm font-medium text-slate-700 flex-grow pr-2 break-words" x-text="purchase.object"></span>
+                                <div
+                                    class="px-4 py-3 flex items-center border-b border-slate-100 dark:border-zinc-700 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200 flex-grow pr-2 break-words"
+                                              x-text="purchase.object"></span>
 
                                     <div class="w-24 text-right flex-shrink-0">
-                                        <span x-text="purchase.price.currency" class="text-xs font-normal text-slate-400 mr-0.5"></span>
-                                        <span x-text="purchase.price.price.toFixed(2)" class="text-sm font-bold text-slate-900"></span>
+                                            <span x-text="purchase.price.currency"
+                                                  class="text-xs font-normal text-slate-400 mr-0.5"></span>
+                                        <span x-text="purchase.price.price.toFixed(2)"
+                                              class="text-sm font-bold text-slate-900 dark:text-white"></span>
                                     </div>
 
-                                    <div class="w-24 text-right flex-shrink-0 text-xs text-slate-500 font-medium">
+                                    <div class="w-24 text-right flex-shrink-0 text-xs text-slate-500 dark:text-slate-400 font-medium">
                                             <span>
                                                 ¥ <span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
                                             </span>
@@ -383,14 +486,18 @@
         </div>
 
         <!-- 错误提示 -->
-        <div x-show="error" x-transition class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm text-center mt-4">
+        <div x-show="error" x-transition
+             class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm text-center mt-4">
             <span x-text="error"></span>
         </div>
 
         <!-- 空状态引导 -->
-        <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0" class="text-center py-20 opacity-40">
-            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0"
+             class="text-center py-20 opacity-40">
+            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor"
+                 viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             <p class="text-slate-500">输入应用名称，开始探索全球价格</p>
         </div>
@@ -398,19 +505,16 @@
     </div>
 
     <!-- 回到顶部按钮 -->
-    <button @click="window.scrollTo({top: 0, behavior: 'smooth'})"
-            x-data="{ show: false }"
-            x-init="window.addEventListener('scroll', () => show = window.scrollY > 600)"
-            x-show="show"
-            x-transition
-            class="fixed bottom-8 right-4 md:right-[calc(50%-384px-4rem)] w-10 h-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:shadow-xl transition-all z-50">
+    <button @click="window.scrollTo({top: 0, behavior: 'smooth'})" x-data="{ show: false }"
+            x-init="window.addEventListener('scroll', () => show = window.scrollY > 600)" x-show="show" x-transition
+            class="fixed bottom-8 right-4 md:right-[calc(50%-384px-4rem)] w-10 h-10 bg-white dark:bg-zinc-800 rounded-full shadow-lg border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:shadow-xl transition-all z-50">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
         </svg>
     </button>
 </main>
 
-<footer class="py-6 text-center text-slate-400 text-xs">
+<footer class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
     <p>&copy; <span x-text="new Date().getFullYear()"></span> App Store Price. Designed for Global Discovery.</p>
 </footer>
 
@@ -433,6 +537,7 @@
             popularWords: [],
             showPopularWords: false,
             popularWordsLoading: false,
+            blurTimeout: null,
 
             appId: '',
             selectedAppImage: '',
@@ -441,10 +546,29 @@
             error: '',
             searched: false,
 
+            // 颜色模式
+            colorMode: localStorage.getItem('colorMode') || 'system',
+
             // 初始化
             init() {
                 this.getAreaList();
                 this.getPopularSearchWords();
+                this.applyColorMode();
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if (this.colorMode === 'system') this.applyColorMode();
+                });
+            },
+
+            setColorMode(mode) {
+                this.colorMode = mode;
+                localStorage.setItem('colorMode', mode);
+                this.applyColorMode();
+            },
+
+            applyColorMode() {
+                const isDark = this.colorMode === 'dark' || 
+                    (this.colorMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
             },
 
             // 搜索应用列表
@@ -572,17 +696,24 @@
             },
 
             onSearchInputFocus() {
+                // 取消之前的 blur 定时器，防止弹窗被错误关闭
+                if (this.blurTimeout) {
+                    clearTimeout(this.blurTimeout);
+                    this.blurTimeout = null;
+                }
                 this.getPopularSearchWords();
                 this.showPopularWords = true;
             },
 
             onSearchInputBlur() {
-                setTimeout(() => {
+                this.blurTimeout = setTimeout(() => {
                     this.showPopularWords = false;
+                    this.blurTimeout = null;
                 }, 200);
             }
         }
     }
 </script>
 </body>
+
 </html>
