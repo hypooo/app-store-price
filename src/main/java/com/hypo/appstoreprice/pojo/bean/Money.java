@@ -20,6 +20,16 @@ import java.math.BigDecimal;
 public class Money {
 
     /**
+     * area
+     */
+    private String area;
+
+    /**
+     * area name
+     */
+    private String areaName;
+
+    /**
      * currency
      */
     private String currency;
@@ -28,6 +38,11 @@ public class Money {
      * currency code
      */
     private String currencyCode;
+
+    /**
+     * locale
+     */
+    private String locale;
 
     /**
      * price
@@ -47,8 +62,11 @@ public class Money {
      */
     public Money(String currencyCode, BigDecimal price) {
         AreaEnum areaEnum = AreaEnum.getByCurrencyCode(currencyCode);
+        this.area = areaEnum.getCode();
+        this.areaName = areaEnum.getName();
         this.currency = areaEnum.getCurrency();
         this.currencyCode = currencyCode;
+        this.locale = areaEnum.getLocale();
         this.price = price;
         this.cnyPrice = ExchangeRateUtil.convertToCny(price, currencyCode);
     }

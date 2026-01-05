@@ -3,6 +3,7 @@ package com.hypo.appstoreprice.controller;
 import com.hypo.appstoreprice.pojo.request.GetAppInfoReqDTO;
 import com.hypo.appstoreprice.pojo.request.GetAppListReqDTO;
 import com.hypo.appstoreprice.pojo.response.AreaResDTO;
+import com.hypo.appstoreprice.pojo.response.GetAppInfoComparisonResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppInfoResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppListResDTO;
 import com.hypo.appstoreprice.service.AppService;
@@ -67,6 +68,17 @@ public class AppController {
     @PostMapping("getAppInfo")
     public List<GetAppInfoResDTO> getAppInfo(@RequestBody @Validated GetAppInfoReqDTO reqDTO) {
         return appService.getAppInfo(reqDTO.getAppId());
+    }
+
+    /**
+     * get app info comparison
+     *
+     * @param reqDTO req dto
+     * @return {@link List }<{@link GetAppInfoComparisonResDTO }>
+     */
+    @PostMapping("getAppInfoComparison")
+    public List<GetAppInfoComparisonResDTO> getAppInfoComparison(@RequestBody @Validated GetAppInfoReqDTO reqDTO) {
+        return appService.getAppInfoComparison(reqDTO.getAppId());
     }
 
 }

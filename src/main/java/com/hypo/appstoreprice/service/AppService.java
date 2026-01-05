@@ -80,6 +80,20 @@ public class AppService {
     }
 
     /**
+     * get area list
+     *
+     * @return {@link List }<{@link AreaResDTO }>
+     */
+    public List<AreaResDTO> getAreaList() {
+        return Arrays.stream(AreaEnum.values()).map(item -> {
+            AreaResDTO resDTO = new AreaResDTO();
+            resDTO.setCode(item.getCode());
+            resDTO.setName(item.getName());
+            return resDTO;
+        }).collect(Collectors.toList());
+    }
+
+    /**
      * get app list
      *
      * @param reqDTO req dto
@@ -261,17 +275,63 @@ public class AppService {
     }
 
     /**
-     * get area list
+     * get app info comparison
      *
-     * @return {@link List }<{@link AreaResDTO }>
+     * @param appId app id
+     * @return {@link List }<{@link GetAppInfoComparisonResDTO }>
      */
-    public List<AreaResDTO> getAreaList() {
-        return Arrays.stream(AreaEnum.values()).map(item -> {
-            AreaResDTO resDTO = new AreaResDTO();
-            resDTO.setCode(item.getCode());
-            resDTO.setName(item.getName());
-            return resDTO;
-        }).collect(Collectors.toList());
+    public List<GetAppInfoComparisonResDTO> getAppInfoComparison(String appId) {
+        List<GetAppInfoResDTO> appInfoList = this.getAppInfo(appId);
+        if (CollUtil.isEmpty(appInfoList)) {
+            return new ArrayList<>();
+        }
+
+        // 用于存储比较结果，key 为购买项目名称
+        Map<String, List<Money>> comparisonMap = new LinkedHashMap<>();
+
+        // 收集各地区的 App 本体价格
+        List<Money> appPriceList = appInfoList.stream()
+            .map(GetAppInfoResDTO::getPrice)
+            .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(appPriceList)) {
+            comparisonMap.put("软件本体", appPriceList);
+        }
+
+        // 收集各地区的内购价格，按内购项目名称分组
+        // 同一地区可能存在相同名称的内购项目，先按价格升序排序后再编序号区分
+        for (GetAppInfoResDTO appInfo : appInfoList) {
+            if (CollUtil.isEmpty(appInfo.getInAppPurchaseList())) {
+                continue;
+            }
+            // 先按价格升序排序
+            List<InAppPurchaseDTO> sortedPurchaseList = appInfo.getInAppPurchaseList().stream()
+                .sorted(Comparator.comparing(item -> item.getPrice().getCnyPrice()))
+                .toList();
+            // 记录当前地区每个内购项目名称出现的次数
+            Map<String, Integer> objectCountMap = new HashMap<>();
+            for (InAppPurchaseDTO purchase : sortedPurchaseList) {
+                String objectName = purchase.getObject();
+                int count = objectCountMap.getOrDefault(objectName, 0) + 1;
+                objectCountMap.put(objectName, count);
+                // 如果同名项目出现多次，使用 "名称 #序号" 的格式区分
+                String key = count > 1 ? StrUtil.format("{} #{}", objectName, count) : objectName;
+                comparisonMap.computeIfAbsent(key, k -> new ArrayList<>()).add(purchase.getPrice());
+            }
+        }
+
+        // 对每个内购项目的价格列表按人民币价格升序排序，并构建结果
+        // 最终按价格列表数量降序排序（更多地区有售的项目排在前面）
+        return comparisonMap.entrySet().stream()
+            .map(entry -> {
+                GetAppInfoComparisonResDTO resDTO = new GetAppInfoComparisonResDTO();
+                resDTO.setObject(entry.getKey());
+                resDTO.setPriceList(entry.getValue().stream()
+                    .sorted(Comparator.comparing(Money::getCnyPrice))
+                    .collect(Collectors.toList()));
+                return resDTO;
+            })
+            .sorted(Comparator.comparing((GetAppInfoComparisonResDTO item) -> item.getPriceList().size()).reversed())
+            .collect(Collectors.toList());
     }
 
 }

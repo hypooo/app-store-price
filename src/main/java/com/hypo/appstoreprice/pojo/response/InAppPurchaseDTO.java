@@ -1,5 +1,6 @@
 package com.hypo.appstoreprice.pojo.response;
 
+import cn.hutool.core.util.StrUtil;
 import com.hypo.appstoreprice.pojo.bean.Money;
 import com.hypo.appstoreprice.pojo.enums.AreaEnum;
 import lombok.Data;
@@ -32,7 +33,7 @@ public class InAppPurchaseDTO {
      */
     public static InAppPurchaseDTO none() {
         InAppPurchaseDTO purchaseDTO = new InAppPurchaseDTO();
-        purchaseDTO.setObject("");
+        purchaseDTO.setObject(StrUtil.EMPTY);
         purchaseDTO.setPrice(new Money(AreaEnum.USA.getCurrencyCode(), BigDecimal.ZERO));
         return purchaseDTO;
     }

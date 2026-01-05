@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-          content="免费查询 App Store 应用价格，支持各地区价格对比、内购项目查询、汇率换算。查看 iOS 应用在美区、日区、港区等不同国家的定价差异，帮你找到最优惠的购买地区。">
+        content="免费查询 App Store 应用价格，支持各地区价格对比、内购项目查询、汇率换算。查看 iOS 应用在美区、日区、港区等不同国家的定价差异，帮你找到最优惠的购买地区。">
     <meta name="keywords"
-          content="App Store 价格查询，App Store 价格监控，App Store 价格对比，苹果应用价格对比，iOS 应用价格，App 内购价格，美区 App 价格，日区 App 价格，港区 App 价格，应用商店价格，全球 App 定价，应用价格换算，苹果商店价格，iPhone 应用价格，iPad 应用价格，Mac 应用价格，应用跨区价格，App 价格差异，Apple Store 价格，iOS 应用内购，应用价格转换，苹果应用商店，App 全球定价，应用价格比较工具，苹果 App 价格">
+        content="App Store 价格查询，App Store 价格监控，App Store 价格对比，苹果应用价格对比，iOS 应用价格，App 内购价格，美区 App 价格，日区 App 价格，港区 App 价格，应用商店价格，全球 App 定价，应用价格换算，苹果商店价格，iPhone 应用价格，iPad 应用价格，Mac 应用价格，应用跨区价格，App 价格差异，Apple Store 价格，iOS 应用内购，应用价格转换，苹果应用商店，App 全球定价，应用价格比较工具，苹果 App 价格">
     <meta name="robots" content="index, follow">
     <meta name="author" content="App Store Price">
     <meta name="language" content="zh-CN">
@@ -30,13 +30,13 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>App Store 价格查询</title>
 
-    <link rel="stylesheet" href="https://fonts.font.im/css2?family=Inter:wght@400;500;600;700&display=swap"/>
+    <link rel="stylesheet" href="https://fonts.font.im/css2?family=Inter:wght@400;500;600;700&display=swap" />
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdmirror.com/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
 
     <!-- Flag Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/lipis/flag-icons/css/flag-icons.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/lipis/flag-icons/css/flag-icons.min.css" />
 
     <!-- Alpine.js & Axios -->
     <script defer src="https://cdn.jsdmirror.com/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
@@ -113,6 +113,40 @@
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+            display: none;
+        }
+
+        /* 自定义滚动条 styling (Tailwind CDN 不包含插件，需手动添加) */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            /* 水平滚动条高度 */
+            width: 6px;
+            /* 垂直滚动条宽度 */
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #e2e8f0;
+            /* slate-200 */
+            border-radius: 99px;
+        }
+
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            /* slate-300 */
+        }
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #3f3f46;
+            /* zinc-700 */
+        }
+
+        .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: #52525b;
+            /* zinc-600 */
         }
 
         /* 动画 */
@@ -142,6 +176,7 @@
         .dark .shadow-ios {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
+
         .dark .app-icon {
             box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
@@ -171,549 +206,753 @@
 
 <body class="min-h-screen flex flex-col dark:bg-[#1C1C1E] dark:text-gray-100" x-data="appStore()" x-cloak>
 
-<!-- 顶部导航 -->
-<header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300"
+    <!-- 顶部导航 -->
+    <header class="fixed top-0 w-full z-50 glass-nav transition-all duration-300"
         :class="{'shadow-sm': window.scrollY > 10}">
-    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <img src="/image.png" alt="Logo" class="w-7 h-7 rounded-lg shadow-sm">
-            <span class="font-semibold text-slate-900 dark:text-white tracking-tight">App Store Price</span>
-        </div>
-        <div class="flex items-center gap-3">
-            <!-- 颜色模式切换 -->
-            <div class="relative flex items-center" x-data="{ open: false }">
-                <button @click="open = !open" class="w-5 h-5 text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
-                    <svg x-cloak x-show="colorMode === 'light'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <svg x-cloak x-show="colorMode === 'dark'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                    <svg x-cloak x-show="colorMode === 'system'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </button>
-                <div x-show="open" @click.away="open = false" x-transition
-                     class="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-slate-200 dark:border-zinc-700 py-1 z-50">
-                    <button @click="setColorMode('system'); open = false"
+        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <img src="/image.png" alt="Logo" class="w-7 h-7 rounded-lg shadow-sm">
+                <span class="font-semibold text-slate-900 dark:text-white tracking-tight">App Store Price</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- 颜色模式切换 -->
+                <div class="relative flex items-center" x-data="{ open: false }">
+                    <button @click="open = !open"
+                        class="w-5 h-5 text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+                        <svg x-cloak x-show="colorMode === 'light'" class="w-5 h-5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg x-cloak x-show="colorMode === 'dark'" class="w-5 h-5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg x-cloak x-show="colorMode === 'system'" class="w-5 h-5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-transition
+                        class="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-slate-200 dark:border-zinc-700 py-1 z-50">
+                        <button @click="setColorMode('system'); open = false"
                             class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
                             :class="colorMode === 'system' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        跟随系统
-                    </button>
-                    <button @click="setColorMode('light'); open = false"
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            跟随系统
+                        </button>
+                        <button @click="setColorMode('light'); open = false"
                             class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
                             :class="colorMode === 'light' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        浅色模式
-                    </button>
-                    <button @click="setColorMode('dark'); open = false"
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            浅色模式
+                        </button>
+                        <button @click="setColorMode('dark'); open = false"
                             class="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center gap-2"
                             :class="colorMode === 'dark' ? 'text-blue-600' : 'text-slate-700 dark:text-slate-200'">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                        深色模式
-                    </button>
-                </div>
-            </div>
-            <a href="https://github.com/hypooo" target="_blank"
-               class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                </svg>
-            </a>
-        </div>
-    </div>
-</header>
-
-<main class="flex-grow pt-24 pb-12 px-4">
-    <div class="max-w-3xl mx-auto">
-
-        <!-- 标题区域 -->
-        <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">
-                探索全球应用定价
-            </h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base">
-                对比 App Store 各区价格与内购项目
-            </p>
-        </div>
-
-        <!-- 搜索栏 -->
-        <div
-            class="bg-white dark:bg-zinc-800 rounded-2xl shadow-ios p-2 mb-8 relative z-20 transition-all duration-300 hover:shadow-ios-hover">
-            <div class="flex flex-col md:flex-row gap-2">
-                <!-- 地区选择 -->
-                <div class="relative md:w-40 flex-shrink-0">
-                    <div
-                        class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
-                        <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm shadow-sm"></span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            深色模式
+                        </button>
                     </div>
-                    <select x-model="areaCode"
+                </div>
+                <a href="https://github.com/hypooo" target="_blank"
+                    class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow pt-24 pb-12 px-4">
+        <div class="max-w-3xl mx-auto">
+
+            <!-- 标题区域 -->
+            <div class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">
+                    探索全球应用定价
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base">
+                    对比 App Store 各区价格与内购项目
+                </p>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div
+                class="bg-white dark:bg-zinc-800 rounded-2xl shadow-ios p-2 mb-8 relative z-20 transition-all duration-300 hover:shadow-ios-hover">
+                <div class="flex flex-col md:flex-row gap-2">
+                    <!-- 地区选择 -->
+                    <div class="relative md:w-40 flex-shrink-0">
+                        <div
+                            class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
+                            <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm shadow-sm"></span>
+                        </div>
+                        <select x-model="areaCode"
                             class="w-full h-12 pl-10 pr-8 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-600 transition-colors relative z-0"
                             :disabled="loadingAppList || loading">
-                        <template x-for="area in areaList" :key="area.code">
-                            <option :value="area.code" x-text="area.name + ' ' + area.code.toUpperCase()"></option>
-                        </template>
-                    </select>
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- 输入框 -->
-                <div class="relative flex-grow">
-                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <input type="text" x-ref="searchInput" x-model="appName"
-                           @keyup.enter="loading ? null : searchAppList" @focus="onSearchInputFocus"
-                           @blur="onSearchInputBlur" placeholder="搜索应用、游戏..." maxlength="20"
-                           class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
-                           :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
-
-                    <!-- 清除按钮 -->
-                    <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                  clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
-
-                    <!-- 热门搜索下拉 -->
-                    <div x-show="showPopularWords && popularWords.length > 0" x-transition.opacity.duration.200ms
-                         class="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 dark:border-zinc-700/50 p-3 z-30"
-                         @mousedown.prevent>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="word in popularWords" :key="word">
-                                <button @click="selectPopularWord(word)"
-                                        class="px-3 py-1.5 bg-slate-100 dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600 dark:text-slate-300">
-                                    <span x-text="word"></span>
-                                </button>
+                            <template x-for="area in areaList" :key="area.code">
+                                <option :value="area.code" x-text="area.name + ' ' + area.code.toUpperCase()"></option>
                             </template>
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </div>
                     </div>
-                </div>
 
-                <!-- 搜索按钮 -->
-                <button @click="searchAppList"
+                    <!-- 输入框 -->
+                    <div class="relative flex-grow">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" x-ref="searchInput" x-model="appName"
+                            @keyup.enter="loading ? null : searchAppList" @focus="onSearchInputFocus"
+                            @blur="onSearchInputBlur" placeholder="搜索应用、游戏..." maxlength="20"
+                            class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
+                            :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
+
+                        <!-- 清除按钮 -->
+                        <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+
+                        <!-- 热门搜索下拉 -->
+                        <div x-show="showPopularWords && popularWords.length > 0" x-transition.opacity.duration.200ms
+                            class="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 dark:border-zinc-700/50 p-3 z-30"
+                            @mousedown.prevent>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="word in popularWords" :key="word">
+                                    <button @click="selectPopularWord(word)"
+                                        class="px-3 py-1.5 bg-slate-100 dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600 dark:text-slate-300">
+                                        <span x-text="word"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 搜索按钮 -->
+                    <button @click="searchAppList"
                         class="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 min-w-[100px]"
                         :disabled="loadingAppList || loading">
-                    <span x-show="!loadingAppList">搜索</span>
-                    <span x-show="loadingAppList" class="spinner spinner-xs"></span>
-                </button>
-            </div>
+                        <span x-show="!loadingAppList">搜索</span>
+                        <span x-show="loadingAppList" class="spinner spinner-xs"></span>
+                    </button>
+                </div>
 
-            <!-- 错误提示 -->
-            <div x-show="errorAppList" x-transition class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clip-rule="evenodd"></path>
-                </svg>
-                <span x-text="errorAppList"></span>
-            </div>
-        </div>
-
-        <!-- 搜索结果列表 -->
-        <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-10">
-            <div class="flex justify-between items-end mb-4 px-1">
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">搜索结果</h2>
-                <button @click="appListCollapsed = !appListCollapsed"
-                        class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
-                    <span x-text="appListCollapsed ? '展开全部' : '收起'"></span>
-                    <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none"
-                         stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                        </path>
+                <!-- 错误提示 -->
+                <div x-show="errorAppList" x-transition class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"></path>
                     </svg>
-                </button>
+                    <span x-text="errorAppList"></span>
+                </div>
             </div>
 
-            <div x-show="!appListCollapsed" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <template x-for="app in appList" :key="app.appId">
-                    <div @click="selectApp(app)"
-                         class="bg-white dark:bg-zinc-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 transition-all cursor-pointer group flex items-center gap-3">
-                        <img :src="app.appImage"
-                             class="w-14 h-14 app-icon bg-slate-100 dark:bg-zinc-700 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                        <div class="flex-grow min-w-0">
-                            <h3 class="font-semibold text-slate-900 dark:text-white text-sm truncate" x-text="app.appName"></h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" x-text="app.appDesc || '应用'"></p>
-                            <div class="flex items-center gap-2 mt-1.5">
-                                <div
-                                    class="flex items-center text-[10px] text-slate-400 bg-slate-50 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
-                                    <svg class="w-2.5 h-2.5 text-orange-400 ml-0.5 fill-current"
-                                         viewBox="0 0 20 20">
-                                        <path
-                                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                    <span x-text="app.rating ? app.rating.toFixed(1) : 'N/A'"></span>
+            <!-- 搜索结果列表 -->
+            <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-10">
+                <div class="flex justify-between items-end mb-4 px-1">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">搜索结果</h2>
+                    <button @click="appListCollapsed = !appListCollapsed"
+                        class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                        <span x-text="appListCollapsed ? '展开全部' : '收起'"></span>
+                        <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div x-show="!appListCollapsed" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <template x-for="app in appList" :key="app.appId">
+                        <div @click="selectApp(app)"
+                            class="bg-white dark:bg-zinc-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 transition-all cursor-pointer group flex items-center gap-3">
+                            <img :src="app.appImage"
+                                class="w-14 h-14 app-icon bg-slate-100 dark:bg-zinc-700 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            <div class="flex-grow min-w-0">
+                                <h3 class="font-semibold text-slate-900 dark:text-white text-sm truncate"
+                                    x-text="app.appName"></h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5"
+                                    x-text="app.appDesc || '应用'"></p>
+                                <div class="flex items-center gap-2 mt-1.5">
+                                    <div
+                                        class="flex items-center text-[10px] text-slate-400 bg-slate-50 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
+                                        <svg class="w-2.5 h-2.5 text-orange-400 ml-0.5 fill-current"
+                                            viewBox="0 0 20 20">
+                                            <path
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                        <span x-text="app.rating ? app.rating.toFixed(1) : 'N/A'"></span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <button
-                                class="w-8 h-8 rounded-full bg-slate-50 dark:bg-zinc-700 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <div x-show="appListCollapsed" @click="appListCollapsed = false"
-                 class="bg-white/50 dark:bg-zinc-800/50 border border-dashed border-slate-300 dark:border-zinc-600 rounded-xl p-3 text-center text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:border-blue-300 hover:text-blue-600 transition-all">
-                已折叠搜索结果，点击查看
-            </div>
-        </div>
-
-        <!-- 加载详情中 -->
-        <div x-show="loading" class="py-20 text-center flex flex-col items-center">
-            <div class="spinner spinner-lg text-blue-600 mb-4"></div>
-            <p class="text-slate-400 text-sm font-medium animate-pulse">正在获取全球定价数据...</p>
-        </div>
-
-        <!-- 详情结果 -->
-        <div x-show="results.length > 0 && !loading && appListCollapsed" x-transition class="space-y-6">
-            <template x-for="app in results" :key="app.area">
-                <div class="bg-white dark:bg-zinc-800/80 rounded-3xl shadow-ios overflow-hidden border border-slate-100/50 dark:border-white/5">
-                    <!-- 头部信息 -->
-                    <div class="p-6 pb-4 flex flex-col sm:flex-row gap-5">
-                        <div class="relative flex-shrink-0 mx-auto sm:mx-0 w-28 h-28">
-                            <img :src="selectedAppImage"
-                                 class="w-full h-full app-icon bg-slate-100 dark:bg-zinc-700 object-cover shadow-md">
-                            <div
-                                class="absolute -bottom-3 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
-                                    <span :class="'fi fi-' + app.area.toLowerCase()"
-                                          class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
-                                <span x-text="app.areaName || app.area"></span>
-                            </div>
-                        </div>
-
-                        <div class="flex-grow text-center sm:text-left min-w-0">
-                            <h2 class="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-1" x-text="app.name"></h2>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2" x-text="app.subtitle"></p>
-
-                            <div
-                                class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
-                                <span class="bg-slate-100 dark:bg-zinc-700 px-2 py-1 rounded-md" x-text="app.developer"></span>
-                                <a :href="app.appStoreUrl" target="_blank"
-                                   class="text-blue-600 hover:underline flex items-center gap-1">
-                                    App Store
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex-shrink-0">
+                                <button
+                                    class="w-8 h-8 rounded-full bg-slate-50 dark:bg-zinc-700 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                        </path>
+                                            d="M9 5l7 7-7 7"></path>
                                     </svg>
-                                </a>
+                                </button>
                             </div>
+                        </div>
+                    </template>
+                </div>
 
-                            <!-- 价格按钮 -->
-                            <div class="flex items-center justify-center sm:justify-start gap-3">
+                <div x-show="appListCollapsed" @click="appListCollapsed = false"
+                    class="bg-white/50 dark:bg-zinc-800/50 border border-dashed border-slate-300 dark:border-zinc-600 rounded-xl p-3 text-center text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:border-blue-300 hover:text-blue-600 transition-all">
+                    已折叠搜索结果，点击查看
+                </div>
+            </div>
+
+            <!-- 加载详情中 -->
+            <div x-show="loading" class="py-20 text-center flex flex-col items-center">
+                <div class="spinner spinner-lg text-blue-600 mb-4"></div>
+                <p class="text-slate-400 text-sm font-medium animate-pulse">正在获取全球定价数据...</p>
+            </div>
+
+            <!-- 详情结果 -->
+            <div x-show="(results.length > 0 || comparisonResults.length > 0) && !loading && appListCollapsed"
+                x-transition class="space-y-6">
+
+                <!-- 标签页切换 -->
+                <div class="flex justify-center mb-2">
+                    <div class="bg-slate-100 dark:bg-zinc-700/50 p-1.5 rounded-xl inline-flex shadow-inner">
+                        <button @click="currentTab = 'comparison'"
+                            :class="currentTab === 'comparison' ? 'bg-white dark:bg-zinc-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
+                            class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3">
+                                </path>
+                            </svg>
+                            全球比价
+                        </button>
+                        <button @click="currentTab = 'list'"
+                            :class="currentTab === 'list' ? 'bg-white dark:bg-zinc-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
+                            class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                            </svg>
+                            分地区详情
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 全球比价视图 -->
+                <div x-show="currentTab === 'comparison'" class="animate-fade-in space-y-6">
+                    <!-- 应用头部卡片 -->
+                    <div
+                        class="bg-white dark:bg-zinc-800 rounded-3xl shadow-ios p-6 border border-slate-100/50 dark:border-white/5 relative overflow-hidden">
+
+                        <div class="flex flex-col sm:flex-row gap-5 relative z-10">
+                            <div class="flex-shrink-0 mx-auto sm:mx-0">
+                                <img :src="currentApp.appImage || selectedAppImage"
+                                    class="w-24 h-24 app-icon bg-slate-100 dark:bg-zinc-700 object-cover shadow-lg">
+                            </div>
+                            <div class="flex-grow text-center sm:text-left">
+                                <h2 class="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-2"
+                                    x-text="currentApp.name || appName"></h2>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 max-w-2xl"
+                                    x-text="currentApp.subtitle || ''"></p>
                                 <div
-                                    class="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-4 py-1.5 rounded-full font-bold text-base">
-                                    <span x-text="app.price.currency" class="mr-1 text-xs opacity-70"></span>
-                                    <span x-text="app.price.price === 0 ? '免费' : app.price.price"></span>
-                                </div>
-                                <div x-show="app.price.price > 0 && app.price.cnyPrice > 0"
-                                     class="text-xs text-slate-400 font-medium">
-                                    ≈ ¥<span x-text="app.price.cnyPrice.toFixed(2)"></span>
+                                    class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400">
+                                    <span class="bg-slate-100 dark:bg-zinc-700 px-3 py-1 rounded-full font-medium"
+                                        x-text="currentApp.developer || 'Developer'"></span>
+                                    <a :href="currentApp.appStoreUrl" target="_blank" x-show="currentApp.appStoreUrl"
+                                        class="text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full font-medium transition-colors">
+                                        App Store
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                            </path>
+                                        </svg>
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 内购列表 -->
-                    <div class="border-t border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/50 p-5">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">App 内购买项目
-                        </h3>
+                    <!-- 比价区域 -->
+                    <div x-show="comparisonResults.length > 0"
+                        class="bg-white dark:bg-zinc-800 rounded-3xl shadow-ios border border-slate-100/50 dark:border-white/5 overflow-hidden flex flex-col">
 
-                        <div x-show="app.inAppPurchaseList.length === 0"
-                             class="text-center py-6 text-slate-400 text-sm">
-                            无内购项目
+                        <!-- 顶部项目标签栏 -->
+                        <div class="border-b border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/30">
+                            <div class="flex overflow-x-auto p-2 gap-2 snap-x custom-scrollbar pb-3">
+                                <template x-for="(item, index) in comparisonResults" :key="index">
+                                    <button @click="selectedComparisonIndex = index"
+                                        class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all snap-start whitespace-nowrap"
+                                        :class="selectedComparisonIndex === index ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-slate-100 dark:ring-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-zinc-700/50 hover:text-slate-800 dark:hover:text-slate-200'">
+                                        <span x-text="item.object"></span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
 
-                        <div x-show="app.inAppPurchaseList.length > 0"
-                             class="bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 overflow-hidden shadow-sm">
-                            <div
-                                class="flex bg-slate-50/80 dark:bg-zinc-700/50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-zinc-700">
-                                <div class="flex-grow">项目名称</div>
-                                <div class="w-24 text-right">价格</div>
-                                <div class="w-24 text-right">约合人民币</div>
+                        <!-- 价格列表 -->
+                        <div class="p-4 sm:p-6 min-h-[300px]">
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                <span
+                                    class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-1 h-4 rounded-full"></span>
+                                <span x-text="comparisonResults[selectedComparisonIndex]?.object"></span>
+
+                            </h3>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                <template
+                                    x-for="(price, index) in comparisonResults[selectedComparisonIndex]?.priceList"
+                                    :key="price.area">
+                                    <div
+                                        class="bg-slate-50 dark:bg-zinc-700/30 rounded-2xl p-3 border border-slate-100 dark:border-zinc-700/50 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors group relative">
+                                        <!-- 最低价徽章 -->
+                                        <div x-show="index === 0 && price.price > 0"
+                                            class="absolute -top-1.5 -right-1.5 z-10">
+                                            <span
+                                                class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-yellow-200 dark:border-yellow-700/50 shadow-sm">最低</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span :class="'fi fi-' + price.area.toLowerCase()"
+                                                class="rounded shadow-sm !w-5 !h-3.5 flex-shrink-0"></span>
+                                            <span x-text="price.areaName"
+                                                class="text-xs text-slate-500 dark:text-slate-400 truncate"></span>
+                                        </div>
+                                        <div class="font-bold text-base truncate"
+                                            :class="{'text-green-600 dark:text-green-400': price.price === 0, 'text-yellow-600 dark:text-yellow-500': index === 0 && price.price > 0, 'text-slate-900 dark:text-white': price.price > 0 && index > 0}"
+                                            :title="price.price === 0 ? '免费' : ('¥ ' + formatPrice(price.cnyPrice, 'zh-CN'))">
+                                            <span x-show="price.price > 0" class="text-xs font-normal opacity-70 mr-0.5"
+                                                :class="{'text-yellow-600 dark:text-yellow-500': index === 0}">¥</span>
+                                            <span x-text="formatPrice(price.cnyPrice, 'zh-CN')"></span>
+                                        </div>
+                                        <div x-show="price.price > 0"
+                                            class="text-xs text-slate-400 font-medium mt-0.5 whitespace-nowrap overflow-hidden">
+                                            <div class="truncate"
+                                                :title="price.currency + ' ' + formatPrice(price.price, price.locale)">
+                                                <span x-text="price.currency" class="opacity-80 mr-0.5"></span>
+                                                <span x-text="formatPrice(price.price, price.locale)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
-                            <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
-                                <div
-                                    class="px-4 py-3 flex items-center border-b border-slate-100 dark:border-zinc-700 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors">
-                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200 flex-grow pr-2 break-words"
-                                              x-text="purchase.object"></span>
-
-                                    <div class="w-24 text-right flex-shrink-0">
-                                            <span x-text="purchase.price.currency"
-                                                  class="text-xs font-normal text-slate-400 mr-0.5"></span>
-                                        <span x-text="purchase.price.price.toFixed(2)"
-                                              class="text-sm font-bold text-slate-900 dark:text-white"></span>
-                                    </div>
-
-                                    <div class="w-24 text-right flex-shrink-0 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                            <span>
-                                                ¥ <span x-text="purchase.price.cnyPrice.toFixed(2)"></span>
-                                            </span>
-                                    </div>
-                                </div>
-                            </template>
                         </div>
                     </div>
                 </div>
-            </template>
+
+                <!-- 分地区详情列表 (原内容) -->
+                <div x-show="currentTab === 'list'" class="space-y-6">
+                    <template x-for="app in results" :key="app.area">
+                        <div
+                            class="bg-white dark:bg-zinc-800/80 rounded-3xl shadow-ios overflow-hidden border border-slate-100/50 dark:border-white/5">
+                            <!-- 头部信息 -->
+                            <div class="p-6 pb-4 flex flex-col sm:flex-row gap-5">
+                                <div class="relative flex-shrink-0 mx-auto sm:mx-0 w-24 h-24">
+                                    <img :src="selectedAppImage"
+                                        class="w-full h-full app-icon bg-slate-100 dark:bg-zinc-700 object-cover shadow-md">
+                                    <div
+                                        class="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
+                                        <span :class="'fi fi-' + app.area.toLowerCase()"
+                                            class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
+                                        <span x-text="app.areaName || app.area"></span>
+                                    </div>
+                                </div>
+
+                                <div class="flex-grow text-center sm:text-left min-w-0">
+                                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-2"
+                                        x-text="app.name"></h2>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 max-w-2xl"
+                                        x-text="app.subtitle"></p>
+
+                                    <div
+                                        class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400 mb-4">
+                                        <span class="bg-slate-100 dark:bg-zinc-700 px-3 py-1 rounded-full font-medium"
+                                            x-text="app.developer"></span>
+                                        <a :href="app.appStoreUrl" target="_blank"
+                                            class="text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full font-medium transition-colors">
+                                            App Store
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                </path>
+                                            </svg>
+                                        </a>
+                                    </div>
+
+                                    <!-- 价格按钮 -->
+                                    <div class="flex items-center justify-center sm:justify-start gap-3">
+                                        <div
+                                            class="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-4 py-1.5 rounded-full font-bold text-sm">
+                                            <span x-text="app.price.currency" class="mr-1 text-xs opacity-70"></span>
+                                            <span
+                                                x-text="app.price.price === 0 ? '免费' : formatPrice(app.price.price, app.price.locale)"></span>
+                                        </div>
+                                        <div x-show="app.price.price > 0 && app.price.cnyPrice > 0"
+                                            class="text-xs text-slate-400 font-medium">
+                                            ≈ ¥<span x-text="formatPrice(app.price.cnyPrice, 'zh-CN')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 内购列表 -->
+                            <div
+                                class="border-t border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/50 p-5">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">App
+                                    内购买项目
+                                </h3>
+
+                                <div x-show="app.inAppPurchaseList.length === 0"
+                                    class="text-center py-6 text-slate-400 text-sm">
+                                    无内购项目
+                                </div>
+
+                                <div x-show="app.inAppPurchaseList.length > 0"
+                                    class="bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 overflow-hidden shadow-sm">
+                                    <div
+                                        class="flex bg-slate-50/80 dark:bg-zinc-700/50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-zinc-700">
+                                        <div class="flex-grow">项目名称</div>
+                                        <div class="w-32 text-right">价格</div>
+                                        <div class="w-32 text-right">约合人民币</div>
+                                    </div>
+                                    <template x-for="(purchase, index) in app.inAppPurchaseList" :key="index">
+                                        <div
+                                            class="px-4 py-3 flex items-center border-b border-slate-100 dark:border-zinc-700 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                            <span
+                                                class="text-sm font-medium text-slate-700 dark:text-slate-200 flex-grow pr-2 break-words"
+                                                x-text="purchase.object"></span>
+
+                                            <div
+                                                class="w-32 text-right flex-shrink-0 text-xs text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
+                                                <div class="truncate"
+                                                    :title="purchase.price.price === 0 ? '免费' : ((purchase.price.currency || '') + ' ' + formatPrice(purchase.price.price, purchase.price.locale))">
+                                                    <div
+                                                        :class="{'text-green-600 dark:text-green-400 font-bold': purchase.price.price === 0, 'text-xs font-medium text-slate-500 dark:text-slate-400': purchase.price.price !== 0}">
+                                                        <template x-if="purchase.price.price === 0">
+                                                            <span>免费</span>
+                                                        </template>
+                                                        <template x-if="purchase.price.price !== 0">
+                                                            <span>
+                                                                <span x-text="purchase.price.currency"></span>
+                                                                <span
+                                                                    x-text="formatPrice(purchase.price.price, purchase.price.locale)"></span>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="w-32 text-right flex-shrink-0">
+                                                <div x-show="purchase.price.price > 0">
+                                                    <span
+                                                        class="text-xs font-normal text-slate-400 opacity-70 mr-0.5">¥</span>
+                                                    <span x-text="formatPrice(purchase.price.cnyPrice, 'zh-CN')"
+                                                        class="text-sm font-bold text-slate-900 dark:text-white"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 空状态引导 -->
+            <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0"
+                class="text-center py-20 opacity-40">
+                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <p class="text-slate-500">输入应用名称，开始探索全球价格</p>
+            </div>
+
         </div>
 
-        <!-- 错误提示 -->
-        <div x-show="error" x-transition
-             class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm text-center mt-4">
-            <span x-text="error"></span>
-        </div>
-
-        <!-- 空状态引导 -->
-        <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0"
-             class="text-center py-20 opacity-40">
-            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor"
-                 viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <p class="text-slate-500">输入应用名称，开始探索全球价格</p>
-        </div>
-
-    </div>
-
-    <!-- 回到顶部按钮 -->
-    <button @click="window.scrollTo({top: 0, behavior: 'smooth'})" x-data="{ show: false }"
+        <!-- 回到顶部按钮 -->
+        <button @click="window.scrollTo({top: 0, behavior: 'smooth'})" x-data="{ show: false }"
             x-init="window.addEventListener('scroll', () => show = window.scrollY > 600)" x-show="show" x-transition
             class="fixed bottom-8 right-4 md:right-[calc(50%-384px-4rem)] w-10 h-10 bg-white dark:bg-zinc-800 rounded-full shadow-lg border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:shadow-xl transition-all z-50">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-        </svg>
-    </button>
-</main>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+        </button>
+    </main>
 
-<footer class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-    <p>&copy; <span x-text="new Date().getFullYear()"></span> App Store Price. Designed for Global Discovery.</p>
-</footer>
+    <footer class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
+        <p>&copy; <span x-text="new Date().getFullYear()"></span> App Store Price. Designed for Global Discovery.</p>
+    </footer>
 
-<!-- 逻辑脚本 (保持原有逻辑不变) -->
-<script>
-    function appStore() {
-        return {
-            // 状态变量
-            appName: 'ChatGPT',
-            areaCode: 'us',
-            areaList: [],
-            areaListError: '',
-            areaListLoading: false,
+    <!-- 逻辑脚本 (保持原有逻辑不变) -->
+    <script>
+        function appStore() {
+            return {
+                // 状态变量
+                appName: 'ChatGPT',
+                areaCode: 'us',
+                areaList: [],
+                areaListError: '',
+                areaListLoading: false,
 
-            appList: [],
-            loadingAppList: false,
-            errorAppList: '',
-            appListCollapsed: false,
+                appList: [],
+                loadingAppList: false,
+                errorAppList: '',
+                appListCollapsed: false,
 
-            popularWords: [],
-            showPopularWords: false,
-            popularWordsLoading: false,
-            blurTimeout: null,
+                popularWords: [],
+                showPopularWords: false,
+                popularWordsLoading: false,
+                blurTimeout: null,
 
-            appId: '',
-            selectedAppImage: '',
-            results: [],
-            loading: false,
-            error: '',
-            searched: false,
+                appId: '',
+                selectedAppImage: '',
+                results: [],
+                loading: false,
+                error: '',
+                searched: false,
 
-            // 颜色模式
-            colorMode: localStorage.getItem('colorMode') || 'system',
+                comparisonResults: [],
+                selectedComparisonIndex: 0,
+                currentTab: 'comparison', // comparison, list
 
-            // 初始化
-            init() {
-                this.getAreaList();
-                this.getPopularSearchWords();
-                this.applyColorMode();
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                    if (this.colorMode === 'system') this.applyColorMode();
-                });
-            },
 
-            setColorMode(mode) {
-                this.colorMode = mode;
-                localStorage.setItem('colorMode', mode);
-                this.applyColorMode();
-            },
+                // 颜色模式
+                colorMode: localStorage.getItem('colorMode') || 'system',
 
-            applyColorMode() {
-                const isDark = this.colorMode === 'dark' || 
-                    (this.colorMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                document.documentElement.classList.toggle('dark', isDark);
-            },
+                // 当前选中的应用信息（基于地区）
+                get currentApp() {
+                    if (!this.results || this.results.length === 0) return {};
+                    const app = this.results.find(r => r.area.toLowerCase() === this.areaCode.toLowerCase());
+                    return app || this.results[0] || {};
+                },
 
-            // 搜索应用列表
-            async searchAppList() {
-                if (!this.appName.trim()) {
-                    this.errorAppList = '请输入应用名称';
-                    return;
-                }
-
-                if (this.appName.trim().length > 20) {
-                    this.errorAppList = '应用名称长度不能超过20个字符';
-                    return;
-                }
-
-                this.loadingAppList = true;
-                this.errorAppList = '';
-                this.appList = [];
-                this.results = [];
-                this.searched = false;
-                this.error = '';
-                this.appListCollapsed = false;
-                this.showPopularWords = false;
-
-                try {
-                    const response = await axios.post('/app/getAppList', {
-                        appName: this.appName.trim(),
-                        areaCode: this.areaCode
+                // 价格格式化工具
+                formatPrice(price, locale = 'en-US') {
+                    if (price === 0) return '免费'; // Should be handled by template, but good as fallback
+                    return Number(price).toLocaleString(locale, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
                     });
+                },
 
-                    if (response.data.code === 0) {
-                        this.appList = response.data.data || [];
-                        if (this.appList.length === 0) {
-                            this.errorAppList = '未找到相关应用，请尝试更换关键词或地区';
-                        }
-                    } else {
-                        this.errorAppList = response.data.message || '搜索失败';
-                    }
-                } catch (err) {
-                    this.errorAppList = '网络请求失败，请稍后重试';
-                } finally {
-                    this.loadingAppList = false;
-                }
-            },
-
-            // 选择应用
-            async selectApp(app) {
-                this.appId = app.appId;
-                this.selectedAppImage = app.appImage;
-                this.results = [];
-                this.error = '';
-                this.searched = false;
-                this.appListCollapsed = true;
-
-                // 滚动到顶部
-                window.scrollTo({top: 0, behavior: 'smooth'});
-
-                await this.searchApp();
-            },
-
-            // 查询应用详情
-            async searchApp() {
-                if (!this.appId) return;
-
-                let cleanAppId = this.appId.toString().trim();
-                if (cleanAppId.toLowerCase().startsWith('id')) {
-                    cleanAppId = cleanAppId.substring(2);
-                }
-
-                this.loading = true;
-                this.error = '';
-
-                try {
-                    const response = await axios.post('/app/getAppInfo', {
-                        appId: cleanAppId
+                // 初始化
+                init() {
+                    this.getAreaList();
+                    this.getPopularSearchWords();
+                    this.applyColorMode();
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                        if (this.colorMode === 'system') this.applyColorMode();
                     });
+                },
 
-                    if (response.data.code === 0) {
-                        this.results = response.data.data || [];
-                        this.searched = true;
-                        if (this.results.length === 0) {
-                            this.error = '未找到该应用的详细信息';
-                        }
-                    } else {
-                        this.error = response.data.message || '查询详情失败';
+                setColorMode(mode) {
+                    this.colorMode = mode;
+                    localStorage.setItem('colorMode', mode);
+                    this.applyColorMode();
+                },
+
+                applyColorMode() {
+                    const isDark = this.colorMode === 'dark' ||
+                        (this.colorMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    document.documentElement.classList.toggle('dark', isDark);
+                },
+
+                // 搜索应用列表
+                async searchAppList() {
+                    if (!this.appName.trim()) {
+                        this.errorAppList = '请输入应用名称';
+                        return;
                     }
-                } catch (err) {
-                    this.error = '获取详情失败，请检查网络';
-                } finally {
-                    this.loading = false;
-                }
-            },
 
-            // 获取地区列表
-            async getAreaList() {
-                this.areaListLoading = true;
-                try {
-                    const response = await axios.post('/app/getAreaList', {});
-                    if (response.data.code === 0) {
-                        this.areaList = response.data.data || [];
-                        if (this.areaList.length > 0 && !this.areaList.some(area => area.code === this.areaCode)) {
-                            this.areaCode = this.areaList[0].code;
-                        }
+                    if (this.appName.trim().length > 20) {
+                        this.errorAppList = '应用名称长度不能超过20个字符';
+                        return;
                     }
-                } catch (err) {
-                } finally {
-                    this.areaListLoading = false;
-                }
-            },
 
-            // 获取热门搜索
-            async getPopularSearchWords() {
-                try {
-                    const response = await axios.post('/app/getPopularSearchWordList', {});
-                    if (response.data.code === 0) {
-                        this.popularWords = response.data.data || [];
-                    }
-                } catch (err) {
-                }
-            },
-
-            selectPopularWord(word) {
-                this.appName = word;
-                this.showPopularWords = false;
-                this.searchAppList();
-            },
-
-            onSearchInputFocus() {
-                // 取消之前的 blur 定时器，防止弹窗被错误关闭
-                if (this.blurTimeout) {
-                    clearTimeout(this.blurTimeout);
-                    this.blurTimeout = null;
-                }
-                this.getPopularSearchWords();
-                this.showPopularWords = true;
-            },
-
-            onSearchInputBlur() {
-                this.blurTimeout = setTimeout(() => {
+                    this.loadingAppList = true;
+                    this.errorAppList = '';
+                    this.appList = [];
+                    this.results = [];
+                    this.comparisonResults = [];
+                    this.searched = false;
+                    this.error = '';
+                    this.appListCollapsed = false;
                     this.showPopularWords = false;
-                    this.blurTimeout = null;
-                }, 200);
+
+                    try {
+                        const response = await axios.post('/app/getAppList', {
+                            appName: this.appName.trim(),
+                            areaCode: this.areaCode
+                        });
+
+                        if (response.data.code === 0) {
+                            this.appList = response.data.data || [];
+                            if (this.appList.length === 0) {
+                                this.errorAppList = '未找到相关应用，请尝试更换关键词或地区';
+                            }
+                        } else {
+                            this.errorAppList = response.data.message || '搜索失败';
+                        }
+                    } catch (err) {
+                        this.errorAppList = '网络请求失败，请稍后重试';
+                    } finally {
+                        this.loadingAppList = false;
+                    }
+                },
+
+                // 选择应用
+                async selectApp(app) {
+                    this.appId = app.appId;
+                    this.selectedAppImage = app.appImage;
+                    this.results = [];
+                    this.comparisonResults = [];
+                    this.error = '';
+                    this.searched = false;
+                    this.appListCollapsed = true;
+                    this.currentTab = 'comparison'; // Default to comparison
+
+                    // 滚动到顶部
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    await this.searchApp();
+                },
+
+                // 查询应用详情
+                async searchApp() {
+                    if (!this.appId) return;
+
+
+
+                    let cleanAppId = this.appId.toString().trim();
+                    if (cleanAppId.toLowerCase().startsWith('id')) {
+                        cleanAppId = cleanAppId.substring(2);
+                    }
+
+                    this.loading = true;
+                    this.error = '';
+
+                    try {
+                        const reqBody = { appId: cleanAppId };
+
+                        // 1. 先获取详情
+                        const infoRes = await axios.post('/app/getAppInfo', reqBody);
+
+                        if (infoRes.data.code === 0) {
+                            this.results = infoRes.data.data || [];
+
+                            if (this.results.length === 0) {
+                                this.error = '未找到该应用的详细信息';
+                                return; // 没详情就不查比价了
+                            }
+
+                            // 2. 详情成功后再获取比价
+                            try {
+                                const comparisonRes = await axios.post('/app/getAppInfoComparison', reqBody);
+                                if (comparisonRes.data.code === 0) {
+                                    this.comparisonResults = comparisonRes.data.data || [];
+                                    this.selectedComparisonIndex = 0;
+                                }
+                            } catch (compErr) {
+                                // 比价失败不阻断详情展示
+                            }
+
+                            this.searched = true;
+
+                        } else {
+                            this.error = infoRes.data.message || '查询详情失败';
+                        }
+
+                    } catch (err) {
+                        this.error = '获取详情失败，请检查网络';
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                // 获取地区列表
+                async getAreaList() {
+                    this.areaListLoading = true;
+                    try {
+                        const response = await axios.post('/app/getAreaList', {});
+                        if (response.data.code === 0) {
+                            this.areaList = response.data.data || [];
+                            if (this.areaList.length > 0 && !this.areaList.some(area => area.code === this.areaCode)) {
+                                this.areaCode = this.areaList[0].code;
+                            }
+                        }
+                    } catch (err) {
+                    } finally {
+                        this.areaListLoading = false;
+                    }
+                },
+
+                // 获取热门搜索
+                async getPopularSearchWords() {
+                    try {
+                        const response = await axios.post('/app/getPopularSearchWordList', {});
+                        if (response.data.code === 0) {
+                            this.popularWords = response.data.data || [];
+                        }
+                    } catch (err) {
+                    }
+                },
+
+                selectPopularWord(word) {
+                    this.appName = word;
+                    this.showPopularWords = false;
+                    this.searchAppList();
+                },
+
+                onSearchInputFocus() {
+                    // 取消之前的 blur 定时器，防止弹窗被错误关闭
+                    if (this.blurTimeout) {
+                        clearTimeout(this.blurTimeout);
+                        this.blurTimeout = null;
+                    }
+                    this.getPopularSearchWords();
+                    this.showPopularWords = true;
+                },
+
+                onSearchInputBlur() {
+                    this.blurTimeout = setTimeout(() => {
+                        this.showPopularWords = false;
+                        this.blurTimeout = null;
+                    }, 200);
+                }
             }
         }
-    }
-</script>
+    </script>
 </body>
 
 </html>

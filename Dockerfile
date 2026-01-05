@@ -5,7 +5,7 @@ FROM amazoncorretto:21-alpine
 ENV LANG=C.UTF-8
 ENV TZ=Asia/Shanghai
 
-# 替换为国内源、安装 tzdata 配置时区，然后删除不必要文件
+# 安装 tzdata 配置时区，然后删除不必要文件
 RUN apk add --no-cache tzdata && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
@@ -15,7 +15,7 @@ RUN apk add --no-cache tzdata && \
 # 设置工作目录
 WORKDIR /app
 
-# 暴露端口 8080
+# 暴露端口
 EXPOSE 8080
 
 # 复制 jar 文件到容器中
