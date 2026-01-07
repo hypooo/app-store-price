@@ -298,10 +298,10 @@
                     <div class="relative md:w-40 flex-shrink-0">
                         <div
                             class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
-                            <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm shadow-sm"></span>
+                            <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm"></span>
                         </div>
                         <select x-model="areaCode"
-                            class="w-full h-12 pl-10 pr-8 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-600 transition-colors relative z-0"
+                            class="w-full h-12 pl-10 pr-8 bg-slate-50 dark:bg-zinc-700 rounded-xl text-base font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-600 transition-colors relative z-0"
                             :disabled="loadingAppList || loading">
                             <template x-for="area in areaList" :key="area.code">
                                 <option :value="area.code" x-text="area.name + ' ' + area.code.toUpperCase()"></option>
@@ -326,7 +326,7 @@
                         <input type="text" x-ref="searchInput" x-model="appName"
                             @keyup.enter="loading ? null : searchAppList" @focus="onSearchInputFocus"
                             @blur="onSearchInputBlur" placeholder="搜索应用、游戏..." maxlength="20"
-                            class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
+                            class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
                             :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
 
                         <!-- 清除按钮 -->
@@ -542,7 +542,7 @@
                                         </div>
                                         <div class="flex items-center gap-2 mb-2">
                                             <span :class="'fi fi-' + price.area.toLowerCase()"
-                                                class="rounded shadow-sm !w-5 !h-3.5 flex-shrink-0"></span>
+                                                class="rounded-sm flex-shrink-0"></span>
                                             <span x-text="price.areaName"
                                                 class="text-xs text-slate-500 dark:text-slate-400 truncate"></span>
                                         </div>
@@ -581,7 +581,7 @@
                                     <div
                                         class="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg border border-white/10 flex items-center gap-1">
                                         <span :class="'fi fi-' + app.area.toLowerCase()"
-                                            class="rounded-sm border border-white/30 !bg-cover !bg-center"></span>
+                                            class="rounded-sm !bg-cover !bg-center"></span>
                                         <span x-text="app.areaName || app.area"></span>
                                     </div>
                                 </div>
@@ -721,7 +721,7 @@
                 // 状态变量
                 appName: 'ChatGPT',
                 areaCode: 'us',
-                areaList: [],
+                areaList: [{ code: 'us', name: '美国' }],
                 areaListError: '',
                 areaListLoading: false,
 
@@ -759,7 +759,7 @@
 
                 // 价格格式化工具
                 formatPrice(price, locale = 'en-US') {
-                    if (price === 0) return '免费'; // Should be handled by template, but good as fallback
+                    if (price === 0) return '免费';
                     return Number(price).toLocaleString(locale, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
@@ -790,6 +790,14 @@
 
                 // 搜索应用列表
                 async searchAppList() {
+                    // 先让输入框失去焦点，再关闭热门搜索
+                    this.$refs.searchInput?.blur();
+                    this.showPopularWords = false;
+                    if (this.blurTimeout) {
+                        clearTimeout(this.blurTimeout);
+                        this.blurTimeout = null;
+                    }
+
                     if (!this.appName.trim()) {
                         this.errorAppList = '请输入应用名称';
                         return;
