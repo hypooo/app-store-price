@@ -134,8 +134,4 @@ app-store-price/
 
 ## Star History
 
-<picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hypooo/app-store-price&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hypooo/app-store-price&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hypooo/app-store-price&type=date&legend=top-left" />
-</picture>
+[![Star History Chart](https://api.star-history.com/svg?repos=hypooo/app-store-price&type=date&legend=top-left)](https://www.star-history.com/#hypooo/app-store-price&type=date&legend=top-left)
