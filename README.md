@@ -131,3 +131,7 @@ app-store-price/
 1. 本应用依赖于 App Store 的公开 API 和网页解析，如果 Apple 修改其 API 或页面结构，可能需要相应更新解析逻辑。
 2. 请遵守 Apple 的服务条款，合理使用查询功能，避免过于频繁的请求。
 3. 汇率数据使用实时转换，实际价格可能与 App Store 显示略有差异。
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=hypooo/app-store-price&type=date&legend=top-left)](https://www.star-history.com/#hypooo/app-store-price&type=date&legend=top-left)
