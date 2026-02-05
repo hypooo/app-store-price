@@ -120,23 +120,39 @@ public class AppService {
                 return appListCache;
             }
             List<GetAppListResDTO> resultList = new CopyOnWriteArrayList<>();
-            CollUtil.newArrayList("software", "iPadSoftware", "macSoftware").parallelStream().forEach(entity -> {
-                String searchUrl = StrUtil.format("https://itunes.apple.com/search?term={}&country={}&entity={}", StrUtil.trim(reqDTO.getAppName()), reqDTO.getAreaCode(), entity);
+            CollUtil.newArrayList("iphone", "ipad", "mac", "tv").parallelStream().forEach(entity -> {
+                String searchUrl = StrUtil.format("https://apps.apple.com/{}/{}/search?term={}", reqDTO.getAreaCode(), entity, StrUtil.trim(reqDTO.getAppName()));
                 HttpResponse response = HttpUtil.createGet(searchUrl).execute();
                 if (response.getStatus() != HttpStatus.OK.value()) {
                     String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
                     log.error(errorMessage);
                     throw new BizException(errorMessage);
                 }
-                JSONObject data = JSON.parseObject(response.body());
-                List<AppStoreSearchResultDTO> entitySearchResultList = data.getList("results", AppStoreSearchResultDTO.class);
+                // 解析 HTML
+                Document doc = Jsoup.parse(response.body());
+                // 构造出参
+                Element scriptElement = doc.selectFirst("#serialized-server-data");
+                if (Objects.isNull(scriptElement)) {
+                    log.error("scriptElement is null, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
+                    return;
+                }
+                JSONArray items = JSON.parseArray(scriptElement.html().trim()).getJSONObject(0).getJSONObject("data")
+                    .getJSONArray("shelves").getJSONObject(0)
+                    .getJSONArray("items");
+                JSONArray data = new JSONArray();
+                CollUtil.forEach(items, (item, index) -> {
+                    JSONObject lockup = items.getJSONObject(index).getJSONObject("lockup");
+                    if (Objects.nonNull(lockup) && !"bundle".equals(items.getJSONObject(index).getString("resultType"))) {
+                        data.add(lockup);
+                    }
+                });
+                List<AppStoreSearchResultDTO> entitySearchResultList = data.toList(AppStoreSearchResultDTO.class);
                 List<GetAppListResDTO> entityResultList = entitySearchResultList.stream().map(item -> {
                     GetAppListResDTO dto = new GetAppListResDTO();
-                    dto.setAppId(item.getTrackId());
-                    dto.setAppName(item.getTrackName());
-                    dto.setAppImage(item.getArtworkUrl512());
-                    dto.setAppDesc(item.getDescription());
-                    dto.setRating(item.getAverageUserRating().setScale(1, RoundingMode.HALF_UP));
+                    dto.setAppId(item.getAdamId());
+                    dto.setAppName(item.getTitle());
+                    dto.setAppImage(item.getIcon().getTemplate());
+                    dto.setAppDesc(item.getSubtitle());
                     return dto;
                 }).toList();
                 resultList.addAll(entityResultList);
@@ -144,7 +160,7 @@ public class AppService {
             APP_LIST_CACHE.put(cacheKey, resultList.stream().collect(Collectors.toMap(
                     GetAppListResDTO::getAppId,
                     Function.identity(),
-                    (existingValue, newValue) -> existingValue,
+                    (existingValue, newValue) -> newValue,
                     LinkedHashMap::new))
                 .values()
                 .stream()
@@ -218,7 +234,7 @@ public class AppService {
                 resDTO.setDeveloper(jsonResult.getJSONObject("developerAction").getString("title"));
                 resDTO.setAppStoreUrl(appStoreUrl);
                 // 提取价格信息
-                resDTO.setPrice(parsePrice(jsonResult.getJSONObject("lockup").getJSONObject("buttonAction").getString("priceFormatted"), areaEnum));
+                resDTO.setPrice(parsePrice(jsonResult.getJSONObject("lockup").getJSONObject("offerDisplayProperties").getString("priceFormatted"), areaEnum));
                 // 查找所有内购列表项
                 JSONArray inAppPurchaseArray = jsonResult.getJSONObject("shelfMapping").getJSONObject("information").getJSONArray("items")
                     .toList(JSONObject.class)

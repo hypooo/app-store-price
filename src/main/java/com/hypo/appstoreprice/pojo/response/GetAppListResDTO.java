@@ -2,8 +2,6 @@ package com.hypo.appstoreprice.pojo.response;
 
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 /**
  * get app list res dto
  *
@@ -32,10 +30,5 @@ public class GetAppListResDTO {
      * app desc
      */
     private String appDesc;
-
-    /**
-     * rating
-     */
-    private BigDecimal rating;
 
 }

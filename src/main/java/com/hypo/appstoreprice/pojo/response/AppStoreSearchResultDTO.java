@@ -2,8 +2,6 @@ package com.hypo.appstoreprice.pojo.response;
 
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 /**
  * app store search result dto
  *
@@ -14,28 +12,43 @@ import java.math.BigDecimal;
 public class AppStoreSearchResultDTO {
 
     /**
-     * track id
+     * adamId
      */
-    private String trackId;
+    private String adamId;
 
     /**
-     * track name
+     * title
      */
-    private String trackName;
+    private String title;
 
     /**
-     * artwork url512
+     * subtitle
      */
-    private String artworkUrl512;
+    private String subtitle;
 
     /**
-     * description
+     * icon
      */
-    private String description;
+    private Icon icon;
 
     /**
-     * average user rating
+     * icon
+     *
+     * @author hypo
+     * @date 2026-02-05
      */
-    private BigDecimal averageUserRating;
+    @Data
+    public static class Icon {
+
+        /**
+         * template
+         */
+        private String template;
+
+        public String getTemplate() {
+            return template.replace("{w}x{h}{c}.{f}", "512x512bb.jpg");
+        }
+
+    }
 
 }
