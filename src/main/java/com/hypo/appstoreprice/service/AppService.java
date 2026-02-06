@@ -136,7 +136,7 @@ public class AppService {
                     log.error("scriptElement is null, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
                     return;
                 }
-                JSONArray items = JSON.parseArray(scriptElement.html().trim()).getJSONObject(0).getJSONObject("data")
+                JSONArray items = JSON.parseObject(scriptElement.html().trim()).getJSONArray("data").getJSONObject(0).getJSONObject("data")
                     .getJSONArray("shelves").getJSONObject(0)
                     .getJSONArray("items");
                 JSONArray data = new JSONArray();
@@ -160,7 +160,7 @@ public class AppService {
             APP_LIST_CACHE.put(cacheKey, resultList.stream().collect(Collectors.toMap(
                     GetAppListResDTO::getAppId,
                     Function.identity(),
-                    (existingValue, newValue) -> newValue,
+                    (existingValue, newValue) -> existingValue,
                     LinkedHashMap::new))
                 .values()
                 .stream()
@@ -225,7 +225,7 @@ public class AppService {
                     log.error("appId: {}, area: {}, script element not found", appId, areaEnum.getCode());
                     return;
                 }
-                JSONObject jsonResult = JSON.parseArray(scriptElement.html().trim()).getJSONObject(0).getJSONObject("data");
+                JSONObject jsonResult = JSON.parseObject(scriptElement.html().trim()).getJSONArray("data").getJSONObject(0).getJSONObject("data");
                 // 提取应用名称
                 resDTO.setName(jsonResult.getString("title"));
                 // 提取副标题
