@@ -16,6 +16,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @UtilityClass
 public class ExchangeRateUtil {
 
-    private final static Cache<String, String> RATE_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
+    private final static Cache<String, Map<String, BigDecimal>> RATE_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
 
     /**
      * get exchange rate map
@@ -36,16 +37,22 @@ public class ExchangeRateUtil {
      * @return {@link Map }<{@link String }, {@link BigDecimal }>
      */
     private Map<String, BigDecimal> getExchangeRateMap(String currencyCode) {
-        String cache = RATE_CACHE.get(currencyCode);
-        if (StrUtil.isBlank(cache)) {
-            JSONObject result = JSON.parseObject(HttpUtil.get(StrUtil.format("https://open.er-api.com/v6/latest/{}", currencyCode)));
-            RATE_CACHE.put(currencyCode, JSON.toJSONString(result.getJSONObject("rates")));
+        if (Objects.nonNull(RATE_CACHE.get(currencyCode))) {
+            return RATE_CACHE.get(currencyCode);
         }
-        Map<String, BigDecimal> resultMap = new HashMap<>();
-        JSONObject jsonObject = JSON.parseObject(RATE_CACHE.get(currencyCode));
-        jsonObject.forEach((key, value) -> resultMap.put(key, new BigDecimal(Convert.toStr(value))));
-        return resultMap;
-
+        synchronized (ExchangeRateUtil.class) {
+            if (Objects.nonNull(RATE_CACHE.get(currencyCode))) {
+                return RATE_CACHE.get(currencyCode);
+            }
+            JSONObject result = JSON.parseObject(HttpUtil.get(StrUtil.format("https://open.er-api.com/v6/latest/{}", currencyCode)));
+            if (Objects.isNull(result)) {
+                throw new BizException("get exchange rate failed");
+            }
+            Map<String, BigDecimal> resultMap = new HashMap<>();
+            result.getJSONObject("rates").forEach((key, value) -> resultMap.put(key, new BigDecimal(Convert.toStr(value))));
+            RATE_CACHE.put(currencyCode, resultMap);
+            return resultMap;
+        }
     }
 
     /**

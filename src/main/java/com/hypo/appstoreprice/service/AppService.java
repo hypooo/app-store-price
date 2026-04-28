@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -123,7 +122,7 @@ public class AppService {
             CollUtil.newArrayList("iphone", "ipad", "mac", "tv").parallelStream().forEach(entity -> {
                 String searchUrl = StrUtil.format("https://apps.apple.com/{}/{}/search?term={}", reqDTO.getAreaCode(), entity, StrUtil.trim(reqDTO.getAppName()));
                 HttpResponse response = HttpUtil.createGet(searchUrl).execute();
-                if (response.getStatus() != HttpStatus.OK.value()) {
+                if (!response.isOk()) {
                     String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
                     log.error(errorMessage);
                     throw new BizException(errorMessage);
@@ -207,7 +206,7 @@ public class AppService {
             Arrays.stream(AreaEnum.values()).parallel().forEach(areaEnum -> {
                 String appStoreUrl = StrUtil.format("https://apps.apple.com/{}/app/id{}", areaEnum.getCode(), appId);
                 HttpResponse response = HttpUtil.createGet(appStoreUrl, true).execute();
-                if (response.getStatus() != HttpStatus.OK.value()) {
+                if (!response.isOk()) {
                     log.error("appId: {}, app not found in {} app store", appId, areaEnum.getCode());
                     log.error("{}-{}:failed", appId, areaEnum.getCode());
                     return;
