@@ -30,6 +30,8 @@ public enum AreaEnum {
 
     KOREA("kr", "韩国", "₩", "KRW", StrUtil.COMMA, "앱 내 구입", "ko-KR"),
 
+    PHILIPPINES("ph", "菲律宾", "₱", "PHP", StrUtil.COMMA, "In-App Purchases", "en-PH"),
+
     TURKEY("tr", "土耳其", "₺", "TRY", StrUtil.DOT, "In-App Purchases", "tr-TR"),
 
     NIGERIA("ng", "尼日利亚", "₦", "NGN", StrUtil.COMMA, "In-App Purchases", "en-NG"),
