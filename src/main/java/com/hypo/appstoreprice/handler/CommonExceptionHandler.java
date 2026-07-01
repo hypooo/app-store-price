@@ -4,12 +4,15 @@ import cn.hutool.core.collection.CollUtil;
 import com.hypo.appstoreprice.common.BizException;
 import com.hypo.appstoreprice.common.LogUtil;
 import com.hypo.appstoreprice.pojo.bean.R;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
 
@@ -47,6 +50,14 @@ public class CommonExceptionHandler {
             return R.failed(result.getAllErrors().get(0).getDefaultMessage());
         }
         return R.failed("参数不正确");
+    }
+
+    /**
+     * 404：页面请求重定向首页
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ModelAndView noResourceFoundHandler(NoResourceFoundException ex, HttpServletRequest request) {
+        return new ModelAndView("redirect:/");
     }
 
     /**
