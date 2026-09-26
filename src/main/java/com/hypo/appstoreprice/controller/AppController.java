@@ -2,6 +2,7 @@ package com.hypo.appstoreprice.controller;
 
 import com.hypo.appstoreprice.pojo.request.GetAppInfoReqDTO;
 import com.hypo.appstoreprice.pojo.request.GetAppListReqDTO;
+import com.hypo.appstoreprice.pojo.request.GetTopAppListReqDTO;
 import com.hypo.appstoreprice.pojo.response.AreaResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppInfoComparisonResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppInfoResDTO;
@@ -58,6 +59,17 @@ public class AppController {
     @PostMapping("getAppList")
     public List<GetAppListResDTO> getAppList(@RequestBody @Validated GetAppListReqDTO reqDTO) {
         return appService.getAppList(reqDTO);
+    }
+
+    /**
+     * get top app list
+     *
+     * @param reqDTO req dto
+     * @return {@link List }<{@link GetAppListResDTO }>
+     */
+    @PostMapping("getTopAppList")
+    public List<GetAppListResDTO> getTopAppList(@RequestBody @Validated GetTopAppListReqDTO reqDTO) {
+        return appService.getTopAppList(reqDTO);
     }
 
     /**

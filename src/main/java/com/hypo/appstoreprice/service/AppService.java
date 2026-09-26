@@ -18,6 +18,7 @@ import com.hypo.appstoreprice.common.BizException;
 import com.hypo.appstoreprice.pojo.bean.Money;
 import com.hypo.appstoreprice.pojo.enums.AreaEnum;
 import com.hypo.appstoreprice.pojo.request.GetAppListReqDTO;
+import com.hypo.appstoreprice.pojo.request.GetTopAppListReqDTO;
 import com.hypo.appstoreprice.pojo.response.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -48,6 +49,21 @@ public class AppService {
      * app 搜索列表缓存
      */
     private static final Cache<String, List<GetAppListResDTO>> APP_LIST_CACHE = new TimedCache<>(Duration.ofDays(1L).toMillis(), new ConcurrentHashMap<>());
+
+    /**
+     * 热门榜单缓存（榜单变化较快，缓存 1 小时）
+     */
+    private static final Cache<String, List<GetAppListResDTO>> TOP_APP_LIST_CACHE = new TimedCache<>(Duration.ofHours(1L).toMillis(), new ConcurrentHashMap<>());
+
+    /**
+     * 热门榜单条数
+     */
+    private static final int TOP_APP_LIMIT = 50;
+
+    /**
+     * 热门榜单请求重试次数
+     */
+    private static final int TOP_APP_RETRY_TIMES = 3;
 
     /**
      * app 信息缓存
@@ -178,6 +194,61 @@ public class AppService {
                 })).toList());
         }
         return APP_LIST_CACHE.get(cacheKey);
+    }
+
+    /**
+     * get top app list
+     *
+     * @param reqDTO req dto
+     * @return {@link List }<{@link GetAppListResDTO }>
+     */
+    public List<GetAppListResDTO> getTopAppList(GetTopAppListReqDTO reqDTO) {
+        // 无锁检查缓存
+        String cacheKey = StrUtil.format("{}-{}", reqDTO.getAreaCode(), reqDTO.getChartType());
+        List<GetAppListResDTO> topAppListCache = TOP_APP_LIST_CACHE.get(cacheKey);
+        if (CollUtil.isNotEmpty(topAppListCache)) {
+            return topAppListCache;
+        }
+
+        // 获取锁对象（细粒度锁，按地区和榜单类型分段）
+        Object lock = LOCK_POOL.computeIfAbsent(StrUtil.format("getTopAppList-{}", cacheKey), k -> new Object());
+
+        synchronized (lock) {
+            // 锁内再次检查缓存（双重检查）
+            topAppListCache = TOP_APP_LIST_CACHE.get(cacheKey);
+            if (CollUtil.isNotEmpty(topAppListCache)) {
+                return topAppListCache;
+            }
+            String chartUrl = StrUtil.format("https://rss.marketingtools.apple.com/api/v2/{}/apps/{}/{}/apps.json", reqDTO.getAreaCode(), reqDTO.getChartType(), TOP_APP_LIMIT);
+            // 榜单接口偶发 301 / 超时，失败时重试
+            HttpResponse response = null;
+            for (int i = 0; i < TOP_APP_RETRY_TIMES && (Objects.isNull(response) || !response.isOk()); i++) {
+                try {
+                    response = HttpUtil.createGet(chartUrl, true).timeout(10000).execute();
+                } catch (Exception e) {
+                    log.warn("get top app list error, url: {}, retry: {}", chartUrl, i, e);
+                }
+            }
+            if (Objects.isNull(response) || !response.isOk()) {
+                String errorMessage = StrUtil.format("get top app list failed, areaCode: {}, chartType: {}", reqDTO.getAreaCode(), reqDTO.getChartType());
+                log.error(errorMessage);
+                throw new BizException(errorMessage);
+            }
+            JSONArray results = Optional.ofNullable(JSON.parseObject(response.body()).getJSONObject("feed"))
+                .map(feed -> feed.getJSONArray("results"))
+                .orElse(new JSONArray());
+            List<GetAppListResDTO> resultList = results.toList(JSONObject.class).stream().map(item -> {
+                GetAppListResDTO dto = new GetAppListResDTO();
+                dto.setAppId(item.getString("id"));
+                dto.setAppName(item.getString("name"));
+                dto.setAppImage(StrUtil.replace(item.getString("artworkUrl100"), "100x100bb", "512x512bb"));
+                dto.setAppDesc(item.getString("artistName"));
+                dto.setPlatform("iphone");
+                return dto;
+            }).toList();
+            TOP_APP_LIST_CACHE.put(cacheKey, resultList);
+        }
+        return TOP_APP_LIST_CACHE.get(cacheKey);
     }
 
     /**
