@@ -2,10 +2,12 @@ package com.hypo.appstoreprice.controller;
 
 import com.hypo.appstoreprice.pojo.request.GetAppInfoReqDTO;
 import com.hypo.appstoreprice.pojo.request.GetAppListReqDTO;
+import com.hypo.appstoreprice.pojo.request.GetPopularAppListReqDTO;
 import com.hypo.appstoreprice.pojo.response.AreaResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppInfoComparisonResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppInfoResDTO;
 import com.hypo.appstoreprice.pojo.response.GetAppListResDTO;
+import com.hypo.appstoreprice.service.AppPopularityService;
 import com.hypo.appstoreprice.service.AppService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +31,8 @@ public class AppController {
 
     private final AppService appService;
 
+    private final AppPopularityService appPopularityService;
+
     /**
      * get area list
      *
@@ -40,13 +44,13 @@ public class AppController {
     }
 
     /**
-     * get popular search word list
+     * get popular app list
      *
-     * @return {@link List }<{@link String }>
+     * @return {@link List }<{@link GetAppListResDTO }>
      */
-    @PostMapping("getPopularSearchWordList")
-    public List<String> getPopularSearchWordList() {
-        return appService.getPopularSearchWordList();
+    @PostMapping("getPopularAppList")
+    public List<GetAppListResDTO> getPopularAppList(@RequestBody @Validated GetPopularAppListReqDTO reqDTO) {
+        return appPopularityService.getPopularAppList(reqDTO.getAreaCode());
     }
 
     /**
@@ -57,7 +61,9 @@ public class AppController {
      */
     @PostMapping("getAppList")
     public List<GetAppListResDTO> getAppList(@RequestBody @Validated GetAppListReqDTO reqDTO) {
-        return appService.getAppList(reqDTO);
+        List<GetAppListResDTO> appList = appService.getAppList(reqDTO);
+        appPopularityService.rememberSearchResults(appList);
+        return appList;
     }
 
     /**
@@ -67,7 +73,11 @@ public class AppController {
      */
     @PostMapping("getAppInfo")
     public List<GetAppInfoResDTO> getAppInfo(@RequestBody @Validated GetAppInfoReqDTO reqDTO) {
-        return appService.getAppInfo(reqDTO.getAppId());
+        List<GetAppInfoResDTO> appInfo = appService.getAppInfo(reqDTO.getAppId());
+        if (reqDTO.getClickId() != null && !appInfo.isEmpty()) {
+            appPopularityService.recordAppClick(reqDTO.getAppId(), reqDTO.getClickId(), appInfo);
+        }
+        return appInfo;
     }
 
     /**

@@ -30,6 +30,27 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>App Store 价格查询</title>
 
+    <style>
+        html {
+            background-color: #F2F2F7;
+            color-scheme: light;
+        }
+
+        html.dark {
+            background-color: #1C1C1E;
+            color-scheme: dark;
+        }
+    </style>
+    <script>
+        function applyDocumentColorMode(mode) {
+            const isDark = mode === 'dark' ||
+                (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+        }
+
+        applyDocumentColorMode(localStorage.getItem('colorMode') || 'system');
+    </script>
+
     <link rel="stylesheet" href="https://fonts.font.im/css2?family=Inter:wght@400;500;600;700&display=swap" />
 
     <!-- Tailwind CSS -->
@@ -41,6 +62,9 @@
     <!-- Alpine.js & Axios -->
     <script defer src="https://cdn.jsdmirror.com/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdmirror.com/npm/axios/dist/axios.min.js"></script>
+
+    <!-- UUID v4 -->
+    <script src="https://cdn.jsdmirror.com/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -305,7 +329,7 @@
                             class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
                             <span :class="'fi fi-' + areaCode.toLowerCase()" class="rounded-sm"></span>
                         </div>
-                        <select x-model="areaCode"
+                        <select x-model="areaCode" @change="onAreaChange($event.target.value)"
                             class="w-full h-12 pl-10 pr-8 bg-slate-50 dark:bg-zinc-700 rounded-xl text-base font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-600 transition-colors relative z-0"
                             :disabled="loadingAppList || loading">
                             <template x-for="area in areaList" :key="area.code">
@@ -329,13 +353,14 @@
                             </svg>
                         </div>
                         <input type="text" x-ref="searchInput" x-model="appName"
-                            @keyup.enter="loading ? null : searchAppList" @focus="onSearchInputFocus"
-                            @blur="onSearchInputBlur" placeholder="搜索应用、游戏..." maxlength="20"
+                            @keyup.enter="searchAppList()" @input="onSearchInputChange($event.target.value)"
+                            placeholder="搜索应用、游戏..." maxlength="20" aria-label="搜索应用或游戏"
                             class="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-zinc-700 rounded-xl text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-zinc-600 transition-all"
                             :class="{'ring-2 ring-red-100 bg-red-50': errorAppList}">
 
                         <!-- 清除按钮 -->
-                        <button x-show="appName" @click="appName = ''; $refs.searchInput.focus()"
+                        <button type="button" x-show="appName" @click="clearSearch(); $refs.searchInput.focus()"
+                            aria-label="清空搜索，返回热门应用"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -343,26 +368,10 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                         </button>
-
-                        <!-- 热门搜索下拉 -->
-                        <div x-show="showPopularWords && popularWords.length > 0" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100/50 dark:border-zinc-700/50 p-3 z-30"
-                            @mousedown.prevent>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">热门搜索
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                <template x-for="word in popularWords" :key="word">
-                                    <button @click="selectPopularWord(word)"
-                                        class="px-3 py-1.5 bg-slate-100 dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 rounded-lg text-xs font-medium transition-colors text-slate-600 dark:text-slate-300">
-                                        <span x-text="word"></span>
-                                    </button>
-                                </template>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- 搜索按钮 -->
-                    <button @click="searchAppList"
+                    <button type="button" @click="searchAppList()"
                         class="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 min-w-[100px]"
                         :disabled="loadingAppList || loading">
                         <span x-show="!loadingAppList">搜索</span>
@@ -371,7 +380,7 @@
                 </div>
 
                 <!-- 错误提示 -->
-                <div x-show="errorAppList" x-transition class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
+                <div x-show="errorAppList" x-transition role="alert" class="mt-2 px-2 text-xs text-red-500 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
@@ -381,68 +390,124 @@
                 </div>
             </div>
 
-            <!-- 搜索结果列表 -->
-            <div x-show="appList.length > 0 && !loadingAppList" x-transition class="mb-10">
+            <!-- 热门应用与搜索结果共用列表 -->
+            <div x-show="pageState !== 'detail'" class="mb-10" aria-live="polite">
                 <div class="flex justify-between items-end mb-4 px-1">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">搜索结果</h2>
-                    <button @click="appListCollapsed = !appListCollapsed"
-                        class="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
-                        <span x-text="appListCollapsed ? '展开全部' : '收起'"></span>
-                        <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': !appListCollapsed}" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white"
+                            x-text="pageState === 'home' ? '热门排行' : '搜索结果'"></h2>
+                        <div x-show="pageState === 'home'" class="flex items-center gap-2 mt-1">
+                            <p class="text-xs text-slate-400">按查询次数排序 · 应用与游戏 TOP 10</p>
+                        </div>
+                    </div>
+                    <button type="button" x-show="pageState === 'search'" @click="clearSearch()"
+                        class="inline-flex h-8 items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
+                        <span>返回热门</span>
                     </button>
                 </div>
 
-                <div x-show="!appListCollapsed" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <template x-for="app in appList" :key="app.appId">
-                        <div @click="selectApp(app)"
-                            class="bg-white dark:bg-zinc-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 transition-all cursor-pointer group flex items-center gap-3">
-                            <div
-                                class="w-14 h-14 app-icon bg-slate-100 dark:bg-zinc-700 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                                <img :src="app.appImage" class="app-icon-img">
-                            </div>
-                            <div class="flex-grow min-w-0">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <h3 class="flex-1 min-w-0 font-semibold text-slate-900 dark:text-white text-sm truncate"
-                                        x-text="app.appName"></h3>
+                <div x-show="loadingList && listApps.length === 0" class="py-16 text-center flex flex-col items-center" role="status">
+                    <div class="spinner spinner-lg text-blue-600 mb-4"></div>
+                    <p class="text-slate-400 text-sm" x-text="pageState === 'home' ? '正在加载热门应用...' : '正在搜索应用...'"></p>
+                </div>
+
+                <div x-show="pageState === 'home' && !loadingList && errorPopularApps"
+                    class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center" role="alert">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" x-text="errorPopularApps"></p>
+                    <p class="text-xs text-slate-400 mt-2">也可以直接输入应用名称搜索</p>
+                    <button type="button" @click="getPopularAppList()"
+                        class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">重新加载</button>
+                </div>
+
+                <div x-show="pageState === 'home' && !loadingList && !errorPopularApps && listApps.length === 0"
+                    class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center">
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">热门榜单正在积累中</p>
+                    <p class="text-xs text-slate-400 mt-2">输入应用或游戏名称，开始查询全球价格</p>
+                </div>
+
+                <div x-show="pageState === 'search' && !loadingAppList && !errorAppList && appList.length === 0"
+                    class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center">
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">没有找到相关应用</p>
+                    <p class="text-xs text-slate-400 mt-2">试试其他名称，或切换搜索地区</p>
+                </div>
+
+                <div x-show="pageState === 'search' && !loadingAppList && errorAppList"
+                    class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" x-text="errorAppList"></p>
+                    <button type="button" @click="searchAppList()"
+                        class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">重新搜索</button>
+                </div>
+
+                <div x-show="listApps.length > 0 && (!loadingList || pageState === 'home')" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <template x-for="(app, index) in listApps" :key="app.appId">
+                        <button type="button" @click="selectApp(app)" :disabled="loadingAppList || loading"
+                            :aria-label="'查看' + app.appName + '的全球价格'"
+                            class="bg-white dark:bg-zinc-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all cursor-pointer group flex items-center gap-3 text-left">
+                            <span x-show="pageState === 'home'" x-text="index + 1"
+                                class="w-5 flex-shrink-0 text-center text-sm font-bold tabular-nums"
+                                :class="index < 3 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'"></span>
+                            <span
+                                class="relative w-14 h-14 app-icon bg-slate-100 dark:bg-zinc-700 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                                <span class="text-xl font-semibold text-slate-400" aria-hidden="true"
+                                    x-text="(app.appName || 'A').slice(0, 1)"></span>
+                                <template x-if="app.appImage">
+                                    <img :src="app.appImage" alt="" loading="lazy" @error="$el.style.display = 'none'"
+                                        class="app-icon-img absolute inset-0">
+                                </template>
+                            </span>
+                            <span class="flex-grow min-w-0">
+                                <span class="flex items-center gap-2 min-w-0">
+                                    <span class="flex-1 min-w-0 font-semibold text-slate-900 dark:text-white text-sm truncate"
+                                        x-text="app.appName"></span>
                                     <span x-show="['mac', 'tv'].includes((app.platform || '').toLowerCase())"
                                         class="flex-shrink-0 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
                                         x-text="(app.platform || '').toLowerCase() === 'mac' ? 'Mac' : 'TV'"></span>
-                                </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5"
-                                    x-text="app.appDesc || '应用'"></p>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <button
+                                </span>
+                                <span class="block text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5"
+                                    x-text="app.appDesc || '应用'"></span>
+                            </span>
+                            <span class="flex-shrink-0" aria-hidden="true">
+                                <span
                                     class="w-8 h-8 rounded-full bg-slate-50 dark:bg-zinc-700 text-blue-600 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7"></path>
                                     </svg>
-                                </button>
-                            </div>
-                        </div>
+                                </span>
+                            </span>
+                        </button>
                     </template>
-                </div>
-
-                <div x-show="appListCollapsed" @click="appListCollapsed = false"
-                    class="bg-white/50 dark:bg-zinc-800/50 border border-dashed border-slate-300 dark:border-zinc-600 rounded-xl p-3 text-center text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:border-blue-300 hover:text-blue-600 transition-all">
-                    已折叠搜索结果，点击查看
                 </div>
             </div>
 
+            <div x-show="pageState === 'detail'" class="flex justify-end mb-6 px-1">
+                <button type="button" @click="returnToList()"
+                    class="inline-flex h-8 items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    <span x-text="detailSource === 'search' ? '返回搜索结果' : '返回热门应用'"></span>
+                </button>
+            </div>
+
             <!-- 加载详情中 -->
-            <div x-show="loading" class="py-20 text-center flex flex-col items-center">
+            <div x-show="pageState === 'detail' && loading" class="py-20 text-center flex flex-col items-center" role="status">
                 <div class="spinner spinner-lg text-blue-600 mb-4"></div>
                 <p class="text-slate-400 text-sm font-medium animate-pulse">正在获取全球定价数据...</p>
             </div>
 
+            <div x-show="pageState === 'detail' && !loading && error"
+                class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center" role="alert">
+                <p class="text-sm text-slate-500 dark:text-slate-400" x-text="error"></p>
+                <button type="button" @click="searchApp()"
+                    class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">重试详情查询</button>
+            </div>
+
             <!-- 详情结果 -->
-            <div x-show="(results.length > 0 || comparisonResults.length > 0) && !loading && appListCollapsed"
-                x-transition class="space-y-6">
+            <div x-show="pageState === 'detail' && results.length > 0 && !loading" class="space-y-6">
 
                 <!-- 标签页切换 -->
                 <div class="flex justify-center mb-2">
@@ -477,13 +542,18 @@
 
                         <div class="flex flex-col sm:flex-row gap-5 relative z-10">
                             <div class="flex-shrink-0 mx-auto sm:mx-0">
-                                <div class="w-24 h-24 app-icon bg-slate-100 dark:bg-zinc-700 shadow-lg">
-                                    <img :src="currentApp.appImage || selectedAppImage" class="app-icon-img">
+                                <div class="relative w-24 h-24 app-icon bg-slate-100 dark:bg-zinc-700 shadow-lg flex items-center justify-center">
+                                    <span class="text-3xl font-semibold text-slate-400" aria-hidden="true"
+                                        x-text="(selectedAppName || 'A').slice(0, 1)"></span>
+                                    <template x-if="currentApp.appImage || selectedAppImage">
+                                        <img :src="currentApp.appImage || selectedAppImage" alt=""
+                                            @error="$el.style.display = 'none'" class="app-icon-img absolute inset-0">
+                                    </template>
                                 </div>
                             </div>
                             <div class="flex-grow text-center sm:text-left">
                                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-2"
-                                    x-text="currentApp.name || appName"></h2>
+                                    x-text="currentApp.name || selectedAppName"></h2>
                                 <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 max-w-2xl"
                                     x-text="currentApp.subtitle || ''"></p>
                                 <div
@@ -502,6 +572,18 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div x-show="loadingComparison" class="py-10 text-center flex flex-col items-center" role="status">
+                        <div class="spinner spinner-xs text-blue-600 mb-3"></div>
+                        <p class="text-sm text-slate-400">正在整理全球比价...</p>
+                    </div>
+                    <div x-show="!loadingComparison && errorComparison"
+                        class="bg-white dark:bg-zinc-800 rounded-2xl p-8 text-center" role="alert">
+                        <p class="text-sm text-slate-500 dark:text-slate-400" x-text="errorComparison"></p>
+                        <p class="text-xs text-slate-400 mt-2">可以先查看分地区详情</p>
+                        <button type="button" @click="retryComparison()"
+                            class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">重试全球比价</button>
                     </div>
 
                     <!-- 比价区域 -->
@@ -690,17 +772,6 @@
                 </div>
             </div>
 
-            <!-- 空状态引导 -->
-            <div x-show="!loading && results.length === 0 && !error && !searched && appList.length === 0"
-                class="text-center py-20 opacity-40">
-                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <p class="text-slate-500">输入应用名称，开始探索全球价格</p>
-            </div>
-
         </div>
 
         <!-- 回到顶部按钮 -->
@@ -717,12 +788,13 @@
         <p>&copy; <span x-text="new Date().getFullYear()"></span> App Store Price. Designed for Global Discovery.</p>
     </footer>
 
-    <!-- 逻辑脚本 (保持原有逻辑不变) -->
+    <!-- 页面状态与查询逻辑 -->
     <script>
         function appStore() {
             return {
                 // 状态变量
-                appName: 'ChatGPT',
+                pageState: 'home', // home, search, detail
+                appName: '',
                 areaCode: 'us',
                 areaList: [{ code: 'us', name: '美国' }],
                 areaListError: '',
@@ -731,21 +803,29 @@
                 appList: [],
                 loadingAppList: false,
                 errorAppList: '',
-                appListCollapsed: false,
+                searchQuery: '',
+                searchAreaCode: 'us',
+                searchRequestSequence: 0,
 
-                popularWords: [],
-                showPopularWords: false,
-                popularWordsLoading: false,
-                blurTimeout: null,
+                popularApps: [],
+                popularAppsAreaCode: '',
+                loadingPopularApps: false,
+                errorPopularApps: '',
+                popularRefreshPending: false,
 
                 appId: '',
+                selectedAppName: '',
                 selectedAppImage: '',
+                detailSource: 'popular',
+                clickId: '',
+                detailRequestSequence: 0,
                 results: [],
                 loading: false,
                 error: '',
-                searched: false,
 
                 comparisonResults: [],
+                loadingComparison: false,
+                errorComparison: '',
                 selectedComparisonIndex: 0,
                 currentTab: 'comparison', // comparison, list
 
@@ -753,9 +833,18 @@
                 // 颜色模式
                 colorMode: localStorage.getItem('colorMode') || 'system',
 
+                get listApps() {
+                    if (this.pageState !== 'home') return this.appList;
+                    return this.popularAppsAreaCode === this.areaCode ? this.popularApps : [];
+                },
+
+                get loadingList() {
+                    return this.pageState === 'home' ? this.loadingPopularApps : this.loadingAppList;
+                },
+
                 // 当前选中的应用信息（基于地区）
                 get currentApp() {
-                    if (!this.results || this.results.length === 0) return {};
+                    if (this.results.length === 0) return {};
                     const app = this.results.find(r => r.area.toLowerCase() === this.areaCode.toLowerCase());
                     return app || this.results[0] || {};
                 },
@@ -772,7 +861,7 @@
                 // 初始化
                 init() {
                     this.getAreaList();
-                    this.getPopularSearchWords();
+                    this.getPopularAppList();
                     this.applyColorMode();
                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                         if (this.colorMode === 'system') this.applyColorMode();
@@ -786,129 +875,198 @@
                 },
 
                 applyColorMode() {
-                    const isDark = this.colorMode === 'dark' ||
-                        (this.colorMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                    document.documentElement.classList.toggle('dark', isDark);
+                    applyDocumentColorMode(this.colorMode);
                 },
 
                 // 搜索应用列表
                 async searchAppList() {
-                    // 先让输入框失去焦点，再关闭热门搜索
-                    this.$refs.searchInput?.blur();
-                    this.showPopularWords = false;
-                    if (this.blurTimeout) {
-                        clearTimeout(this.blurTimeout);
-                        this.blurTimeout = null;
-                    }
-
-                    if (!this.appName.trim()) {
+                    if (this.loadingAppList || this.loading) return;
+                    const searchName = this.appName.trim();
+                    if (!searchName) {
                         this.errorAppList = '请输入应用名称';
                         return;
                     }
 
-                    if (this.appName.trim().length > 20) {
+                    if (searchName.length > 20) {
                         this.errorAppList = '应用名称长度不能超过20个字符';
                         return;
                     }
 
+                    this.$refs.searchInput.blur();
+                    this.resetDetail();
+                    const requestSequence = ++this.searchRequestSequence;
+                    this.pageState = 'search';
+                    this.searchQuery = searchName;
+                    this.searchAreaCode = this.areaCode;
+                    this.appName = searchName;
                     this.loadingAppList = true;
                     this.errorAppList = '';
                     this.appList = [];
-                    this.results = [];
-                    this.comparisonResults = [];
-                    this.searched = false;
-                    this.error = '';
-                    this.appListCollapsed = false;
-                    this.showPopularWords = false;
 
                     try {
                         const response = await axios.post('/app/getAppList', {
-                            appName: this.appName.trim(),
-                            areaCode: this.areaCode
+                            appName: searchName,
+                            areaCode: this.searchAreaCode
                         });
+                        if (requestSequence !== this.searchRequestSequence) return;
 
                         if (response.data.code === 0) {
                             this.appList = response.data.data || [];
-                            if (this.appList.length === 0) {
-                                this.errorAppList = '未找到相关应用，请尝试更换关键词或地区';
-                            }
                         } else {
                             this.errorAppList = response.data.message || '搜索失败';
                         }
                     } catch (err) {
+                        if (requestSequence !== this.searchRequestSequence) return;
                         this.errorAppList = '网络请求失败，请稍后重试';
                     } finally {
-                        this.loadingAppList = false;
+                        if (requestSequence === this.searchRequestSequence) {
+                            this.loadingAppList = false;
+                        }
                     }
                 },
 
                 // 选择应用
                 async selectApp(app) {
+                    if (this.loadingAppList || this.pageState === 'detail') return;
+                    this.errorAppList = '';
+                    this.resetDetail();
+                    this.detailSource = this.pageState === 'search' ? 'search' : 'popular';
                     this.appId = app.appId;
+                    this.selectedAppName = app.appName;
                     this.selectedAppImage = app.appImage;
-                    this.results = [];
-                    this.comparisonResults = [];
-                    this.error = '';
-                    this.searched = false;
-                    this.appListCollapsed = true;
-                    this.currentTab = 'comparison'; // Default to comparison
+                    this.clickId = uuidv4().replace(/-/g, '');
+                    this.appName = app.appName;
+                    this.pageState = 'detail';
+                    this.currentTab = 'comparison';
 
-                    // 滚动到顶部
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-
+                    this.$nextTick(() => {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                    });
                     await this.searchApp();
                 },
 
                 // 查询应用详情
                 async searchApp() {
-                    if (!this.appId) return;
-
-
-
+                    if (this.loading || this.pageState !== 'detail') return;
                     let cleanAppId = this.appId.toString().trim();
                     if (cleanAppId.toLowerCase().startsWith('id')) {
                         cleanAppId = cleanAppId.substring(2);
                     }
 
+                    const requestSequence = ++this.detailRequestSequence;
                     this.loading = true;
                     this.error = '';
+                    this.results = [];
+                    this.comparisonResults = [];
+                    this.errorComparison = '';
 
                     try {
-                        const reqBody = { appId: cleanAppId };
-
-                        // 1. 先获取详情
-                        const infoRes = await axios.post('/app/getAppInfo', reqBody);
+                        // 重试同一次选择时复用 clickId，交由后端完成幂等计数。
+                        const infoRes = await axios.post('/app/getAppInfo', {
+                            appId: cleanAppId,
+                            clickId: this.clickId,
+                            source: this.detailSource
+                        });
+                        if (requestSequence !== this.detailRequestSequence) return;
 
                         if (infoRes.data.code === 0) {
                             this.results = infoRes.data.data || [];
 
                             if (this.results.length === 0) {
                                 this.error = '未找到该应用的详细信息';
-                                return; // 没详情就不查比价了
+                                return;
                             }
-
-                            // 2. 详情成功后再获取比价
-                            try {
-                                const comparisonRes = await axios.post('/app/getAppInfoComparison', reqBody);
-                                if (comparisonRes.data.code === 0) {
-                                    this.comparisonResults = comparisonRes.data.data || [];
-                                    this.selectedComparisonIndex = 0;
-                                }
-                            } catch (compErr) {
-                                // 比价失败不阻断详情展示
-                            }
-
-                            this.searched = true;
-
+                            this.loading = false;
+                            await this.getAppComparison(cleanAppId, requestSequence);
                         } else {
                             this.error = infoRes.data.message || '查询详情失败';
                         }
-
                     } catch (err) {
+                        if (requestSequence !== this.detailRequestSequence) return;
                         this.error = '获取详情失败，请检查网络';
                     } finally {
-                        this.loading = false;
+                        if (requestSequence === this.detailRequestSequence) {
+                            this.loading = false;
+                        }
                     }
+                },
+
+                async getAppComparison(appId, requestSequence) {
+                    if (this.loadingComparison) return;
+                    this.loadingComparison = true;
+                    this.errorComparison = '';
+                    try {
+                        const response = await axios.post('/app/getAppInfoComparison', { appId });
+                        if (requestSequence !== this.detailRequestSequence) return;
+                        if (response.data.code === 0) {
+                            this.comparisonResults = response.data.data || [];
+                            this.selectedComparisonIndex = 0;
+                            if (this.comparisonResults.length === 0) {
+                                this.errorComparison = '暂无全球比价数据';
+                            }
+                        } else {
+                            this.errorComparison = response.data.message || '全球比价加载失败';
+                        }
+                    } catch (err) {
+                        if (requestSequence !== this.detailRequestSequence) return;
+                        this.errorComparison = '全球比价加载失败，请稍后重试';
+                    } finally {
+                        if (requestSequence === this.detailRequestSequence) {
+                            this.loadingComparison = false;
+                        }
+                    }
+                },
+
+                retryComparison() {
+                    if (this.pageState !== 'detail' || this.results.length === 0) return;
+                    const appId = this.appId.toString().trim().replace(/^id/i, '');
+                    this.getAppComparison(appId, this.detailRequestSequence);
+                },
+
+                resetDetail() {
+                    ++this.detailRequestSequence;
+                    this.appId = '';
+                    this.selectedAppName = '';
+                    this.selectedAppImage = '';
+                    this.clickId = '';
+                    this.results = [];
+                    this.comparisonResults = [];
+                    this.loading = false;
+                    this.loadingComparison = false;
+                    this.error = '';
+                    this.errorComparison = '';
+                },
+
+                clearSearch() {
+                    const refreshPopularApps = this.pageState !== 'home';
+                    ++this.searchRequestSequence;
+                    this.loadingAppList = false;
+                    this.errorAppList = '';
+                    this.appList = [];
+                    this.searchQuery = '';
+                    this.appName = '';
+                    this.resetDetail();
+                    this.pageState = 'home';
+                    if (refreshPopularApps) this.getPopularAppList();
+                },
+
+                onSearchInputChange(value) {
+                    if (!value.trim()) this.clearSearch();
+                },
+
+                returnToList() {
+                    if (this.pageState !== 'detail') return;
+                    if (this.detailSource === 'search') {
+                        this.resetDetail();
+                        this.appName = this.searchQuery;
+                        this.areaCode = this.searchAreaCode;
+                        this.pageState = 'search';
+                    } else {
+                        this.clearSearch();
+                    }
+                    this.$nextTick(() => {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                    });
                 },
 
                 // 获取地区列表
@@ -919,7 +1077,7 @@
                         if (response.data.code === 0) {
                             this.areaList = response.data.data || [];
                             if (this.areaList.length > 0 && !this.areaList.some(area => area.code === this.areaCode)) {
-                                this.areaCode = this.areaList[0].code;
+                                this.onAreaChange(this.areaList[0].code);
                             }
                         }
                     } catch (err) {
@@ -928,38 +1086,39 @@
                     }
                 },
 
-                // 获取热门搜索
-                async getPopularSearchWords() {
+                onAreaChange(areaCode) {
+                    this.areaCode = areaCode;
+                    if (this.pageState === 'home') this.getPopularAppList();
+                },
+
+                // 排名全站共享，名称与描述按当前地区获取。
+                async getPopularAppList() {
+                    this.errorPopularApps = '';
+                    if (this.loadingPopularApps) {
+                        this.popularRefreshPending = true;
+                        return;
+                    }
+                    const areaCode = this.areaCode;
+                    this.loadingPopularApps = true;
                     try {
-                        const response = await axios.post('/app/getPopularSearchWordList', {});
+                        const response = await axios.post('/app/getPopularAppList', { areaCode });
+                        if (areaCode !== this.areaCode) return;
                         if (response.data.code === 0) {
-                            this.popularWords = response.data.data || [];
+                            this.popularApps = response.data.data || [];
+                            this.popularAppsAreaCode = areaCode;
+                        } else {
+                            this.errorPopularApps = response.data.message || '热门应用加载失败';
                         }
                     } catch (err) {
+                        if (areaCode !== this.areaCode) return;
+                        this.errorPopularApps = '热门应用加载失败，请稍后重试';
+                    } finally {
+                        this.loadingPopularApps = false;
+                        if (this.popularRefreshPending) {
+                            this.popularRefreshPending = false;
+                            if (this.pageState === 'home') this.getPopularAppList();
+                        }
                     }
-                },
-
-                selectPopularWord(word) {
-                    this.appName = word;
-                    this.showPopularWords = false;
-                    this.searchAppList();
-                },
-
-                onSearchInputFocus() {
-                    // 取消之前的 blur 定时器，防止弹窗被错误关闭
-                    if (this.blurTimeout) {
-                        clearTimeout(this.blurTimeout);
-                        this.blurTimeout = null;
-                    }
-                    this.getPopularSearchWords();
-                    this.showPopularWords = true;
-                },
-
-                onSearchInputBlur() {
-                    this.blurTimeout = setTimeout(() => {
-                        this.showPopularWords = false;
-                        this.blurTimeout = null;
-                    }, 200);
                 }
             }
         }

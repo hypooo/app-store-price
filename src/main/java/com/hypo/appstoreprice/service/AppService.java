@@ -12,8 +12,6 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import com.hypo.appstoreprice.common.BizException;
 import com.hypo.appstoreprice.pojo.bean.Money;
 import com.hypo.appstoreprice.pojo.enums.AreaEnum;
@@ -60,25 +58,6 @@ public class AppService {
     private static final ConcurrentHashMap<String, Object> LOCK_POOL = new ConcurrentHashMap<>();
 
     /**
-     * 热门搜索词排行
-     */
-    private static final Multiset<String> POPULAR_SEARCH_WORD = HashMultiset.create();
-
-    /**
-     * get popular search word list
-     *
-     * @return {@link List }<{@link String }>
-     */
-    public List<String> getPopularSearchWordList() {
-        return POPULAR_SEARCH_WORD.entrySet()
-            .stream()
-            .sorted(Comparator.comparingInt(Multiset.Entry<String>::getCount).reversed())
-            .limit(10)
-            .map(Multiset.Entry::getElement)
-            .collect(Collectors.toList());
-    }
-
-    /**
      * get area list
      *
      * @return {@link List }<{@link AreaResDTO }>
@@ -99,9 +78,6 @@ public class AppService {
      * @return {@link List }<{@link GetAppListResDTO }>
      */
     public List<GetAppListResDTO> getAppList(GetAppListReqDTO reqDTO) {
-        // 记录搜索次数
-        POPULAR_SEARCH_WORD.add(reqDTO.getAppName());
-
         // 无锁检查缓存
         String cacheKey = StrUtil.format("{}-{}", reqDTO.getAreaCode(), reqDTO.getAppName());
         List<GetAppListResDTO> appListCache = APP_LIST_CACHE.get(cacheKey);
