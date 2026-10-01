@@ -63,8 +63,27 @@
     <script defer src="https://cdn.jsdmirror.com/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdmirror.com/npm/axios/dist/axios.min.js"></script>
 
-    <!-- UUID v4 -->
-    <script src="https://cdn.jsdmirror.com/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+    <!-- FingerprintJS：异步初始化，失败时查询仍可继续。 -->
+    <script>
+        const fingerprintPromise = import('https://openfpcdn.io/fingerprintjs/v5')
+            .then(FingerprintJS => FingerprintJS.load())
+            .then(fp => fp.get())
+            .then(result => result.visitorId)
+            .catch(() => '');
+
+        async function getFingerprintHeaders() {
+            let timeoutId;
+            try {
+                const fingerprint = await Promise.race([
+                    fingerprintPromise,
+                    new Promise(resolve => { timeoutId = setTimeout(() => resolve(''), 3000); })
+                ]);
+                return fingerprint ? { 'X-Fingerprint': fingerprint } : {};
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+    </script>
 
     <script>
         tailwind.config = {
@@ -817,7 +836,6 @@
                 selectedAppName: '',
                 selectedAppImage: '',
                 detailSource: 'popular',
-                clickId: '',
                 detailRequestSequence: 0,
                 results: [],
                 loading: false,
@@ -934,7 +952,6 @@
                     this.appId = app.appId;
                     this.selectedAppName = app.appName;
                     this.selectedAppImage = app.appImage;
-                    this.clickId = uuidv4().replace(/-/g, '');
                     this.appName = app.appName;
                     this.pageState = 'detail';
                     this.currentTab = 'comparison';
@@ -961,12 +978,12 @@
                     this.errorComparison = '';
 
                     try {
-                        // 重试同一次选择时复用 clickId，交由后端完成幂等计数。
+                        const headers = await getFingerprintHeaders();
+                        if (requestSequence !== this.detailRequestSequence) return;
                         const infoRes = await axios.post('/app/getAppInfo', {
                             appId: cleanAppId,
-                            clickId: this.clickId,
                             source: this.detailSource
-                        });
+                        }, { headers });
                         if (requestSequence !== this.detailRequestSequence) return;
 
                         if (infoRes.data.code === 0) {
@@ -1028,7 +1045,6 @@
                     this.appId = '';
                     this.selectedAppName = '';
                     this.selectedAppImage = '';
-                    this.clickId = '';
                     this.results = [];
                     this.comparisonResults = [];
                     this.loading = false;
