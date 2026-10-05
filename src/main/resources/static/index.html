@@ -424,7 +424,7 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
-                        <span>返回热门</span>
+                        <span>返回热门应用</span>
                     </button>
                 </div>
 
@@ -607,15 +607,46 @@
 
                     <!-- 比价区域 -->
                     <div x-show="comparisonResults.length > 0"
-                        class="bg-white dark:bg-zinc-800 rounded-3xl shadow-ios border border-slate-100/50 dark:border-white/5 overflow-hidden flex flex-col">
+                        class="bg-white dark:bg-zinc-800 rounded-3xl shadow-ios border border-slate-100/50 dark:border-white/5 overflow-hidden flex flex-col md:flex-row">
 
-                        <!-- 顶部项目标签栏 -->
-                        <div class="border-b border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/30">
-                            <div class="flex overflow-x-auto p-2 gap-2 snap-x custom-scrollbar pb-3">
+                        <!-- 手机端项目选择 -->
+                        <div class="md:hidden p-4 border-b border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/30">
+                            <label for="comparison-item" class="flex items-center gap-2 mb-3">
+                                <span class="flex flex-shrink-0 items-center text-slate-400 dark:text-slate-500" aria-hidden="true">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h10M4 17h7M17 14l3 3-3 3"></path>
+                                    </svg>
+                                </span>
+                                <span class="text-xs font-semibold tracking-wide text-slate-800 dark:text-slate-100">比价项目</span>
+                                <span class="ml-auto rounded-full bg-white dark:bg-zinc-700 px-2 py-0.5 text-[10px] font-medium tabular-nums text-slate-500 dark:text-slate-300 ring-1 ring-slate-200/70 dark:ring-white/10" x-text="comparisonResults.length + ' 项'"></span>
+                            </label>
+                            <select id="comparison-item" x-model.number="selectedComparisonIndex"
+                                class="w-full min-w-0 h-11 px-3 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-600 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                                 <template x-for="(item, index) in comparisonResults" :key="index">
-                                    <button @click="selectedComparisonIndex = index"
-                                        class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all snap-start whitespace-nowrap"
-                                        :class="selectedComparisonIndex === index ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-slate-100 dark:ring-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-zinc-700/50 hover:text-slate-800 dark:hover:text-slate-200'">
+                                    <option :value="index" x-text="item.object"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- 电脑端竖向项目列表 -->
+                        <div class="hidden md:block md:w-48 flex-shrink-0 border-r border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/30">
+                            <div class="mx-3 mt-4 mb-3 pb-3 border-b border-slate-200/70 dark:border-white/10">
+                                <h3 class="flex items-center gap-2">
+                                    <span class="flex flex-shrink-0 items-center text-slate-400 dark:text-slate-500" aria-hidden="true">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h10M4 17h7M17 14l3 3-3 3"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="text-xs font-semibold tracking-wide text-slate-800 dark:text-slate-100">比价项目</span>
+                                    <span class="ml-auto rounded-full bg-white dark:bg-zinc-700 px-2 py-0.5 text-[10px] font-medium tabular-nums text-slate-500 dark:text-slate-300 ring-1 ring-slate-200/70 dark:ring-white/10" x-text="comparisonResults.length + ' 项'"></span>
+                                </h3>
+                            </div>
+                            <div class="flex flex-col max-h-[32rem] overflow-y-auto p-2 pt-0 gap-1 custom-scrollbar" role="group" aria-label="选择比价项目">
+                                <template x-for="(item, index) in comparisonResults" :key="index">
+                                    <button type="button" @click="selectedComparisonIndex = index"
+                                        :aria-pressed="selectedComparisonIndex === index"
+                                        class="w-full flex-shrink-0 px-3 py-3 rounded-xl text-xs text-left font-medium transition-colors whitespace-normal break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                        :class="selectedComparisonIndex === index ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-zinc-700/50 hover:text-slate-900 dark:hover:text-slate-200'">
                                         <span x-text="item.object"></span>
                                     </button>
                                 </template>
@@ -623,15 +654,8 @@
                         </div>
 
                         <!-- 价格列表 -->
-                        <div class="p-4 sm:p-6 min-h-[300px]">
-                            <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                <span
-                                    class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-1 h-4 rounded-full"></span>
-                                <span x-text="comparisonResults[selectedComparisonIndex]?.object"></span>
-
-                            </h3>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        <div class="flex-1 min-w-0 p-4 sm:p-6 min-h-[300px]">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <template
                                     x-for="(price, index) in comparisonResults[selectedComparisonIndex]?.priceList"
                                     :key="price.area">
@@ -671,9 +695,24 @@
                     </div>
                 </div>
 
-                <!-- 分地区详情列表 (原内容) -->
-                <div x-show="currentTab === 'list'" class="space-y-6">
-                    <template x-for="app in results" :key="app.area">
+                <!-- 分地区详情列表 -->
+                <div x-show="currentTab === 'list'" class="space-y-6" style="overflow-anchor: none;">
+                    <div class="rounded-2xl border border-slate-200/80 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 shadow-sm">
+                        <div class="flex flex-wrap gap-2" role="group" aria-label="筛选详情地区，可多选">
+                            <button type="button" @click="toggleDetailArea()" :aria-pressed="selectedDetailAreas.length === 0"
+                                class="px-3 py-2 rounded-xl text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                :class="selectedDetailAreas.length === 0 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800' : 'bg-slate-50 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-600'">全部地区</button>
+                            <template x-for="area in availableDetailAreas" :key="area.code">
+                                <button type="button" @click="toggleDetailArea(area.code)" :aria-pressed="selectedDetailAreas.includes(area.code)"
+                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                    :class="selectedDetailAreas.includes(area.code) ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800' : 'bg-slate-50 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-600'">
+                                    <span :class="'fi fi-' + area.code.toLowerCase()" class="rounded-sm" aria-hidden="true"></span>
+                                    <span x-text="area.name"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                    <template x-for="app in filteredDetailResults" :key="app.area">
                         <div
                             class="bg-white dark:bg-zinc-800/80 rounded-3xl shadow-ios overflow-hidden border border-slate-100/50 dark:border-white/5">
                             <!-- 头部信息 -->
@@ -813,6 +852,8 @@
             return {
                 // 状态变量
                 pageState: 'home', // home, search, detail
+                historyDepth: 0,
+                historyNavigating: false,
                 appName: '',
                 areaCode: 'us',
                 areaList: [{ code: 'us', name: '美国' }],
@@ -846,6 +887,7 @@
                 errorComparison: '',
                 selectedComparisonIndex: 0,
                 currentTab: 'comparison', // comparison, list
+                selectedDetailAreas: [],
 
 
                 // 颜色模式
@@ -860,11 +902,43 @@
                     return this.pageState === 'home' ? this.loadingPopularApps : this.loadingAppList;
                 },
 
+                get availableDetailAreas() {
+                    return this.areaList.filter(area =>
+                        this.results.some(app => app.area.toLowerCase() === area.code.toLowerCase()));
+                },
+
+                get filteredDetailResults() {
+                    if (this.selectedDetailAreas.length === 0) return this.results;
+                    return this.results.filter(app => this.selectedDetailAreas.includes(app.area.toLowerCase()));
+                },
+
+                toggleDetailArea(code) {
+                    const scrollTop = window.scrollY;
+                    const scrollLeft = window.scrollX;
+                    if (!code) {
+                        this.selectedDetailAreas = [];
+                    } else if (this.selectedDetailAreas.includes(code)) {
+                        this.selectedDetailAreas = this.selectedDetailAreas.filter(area => area !== code);
+                    } else {
+                        this.selectedDetailAreas = [...this.selectedDetailAreas, code];
+                    }
+                    // 列表增删后保持筛选前的位置，避免浏览器自动调整滚动锚点。
+                    this.$nextTick(() => {
+                        window.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'instant' });
+                    });
+                },
+
                 // 当前选中的应用信息（基于地区）
                 get currentApp() {
                     if (this.results.length === 0) return {};
                     const app = this.results.find(r => r.area.toLowerCase() === this.areaCode.toLowerCase());
-                    return app || this.results[0] || {};
+                    if (app) return app;
+                    // 当前地区无详情时，按地区列表顺序回退，不受价格排序影响。
+                    for (const area of this.areaList) {
+                        const fallback = this.results.find(r => r.area.toLowerCase() === area.code.toLowerCase());
+                        if (fallback) return fallback;
+                    }
+                    return {};
                 },
 
                 // 价格格式化工具
@@ -878,6 +952,12 @@
 
                 // 初始化
                 init() {
+                    window.addEventListener('popstate', event => {
+                        this.historyNavigating = false;
+                        if (event.state?.appStoreNavigation) this.restoreNavigation(event.state);
+                    });
+                    // 刷新时使用默认地区；历史页面状态仅在前进、后退时恢复。
+                    this.saveNavigation();
                     this.getAreaList();
                     this.getPopularAppList();
                     this.applyColorMode();
@@ -896,9 +976,61 @@
                     applyDocumentColorMode(this.colorMode);
                 },
 
+                // 使用浏览器历史，让侧键、工具栏返回和页面返回按钮保持一致。
+                saveNavigation(push = false) {
+                    if (push) ++this.historyDepth;
+                    const state = JSON.parse(JSON.stringify({
+                        appStoreNavigation: true,
+                        historyDepth: this.historyDepth,
+                        pageState: this.pageState,
+                        areaCode: this.areaCode,
+                        appName: this.appName,
+                        searchQuery: this.searchQuery,
+                        searchAreaCode: this.searchAreaCode,
+                        appList: this.appList,
+                        errorAppList: this.errorAppList,
+                        loadingAppList: this.loadingAppList,
+                        appId: this.appId,
+                        selectedAppName: this.selectedAppName,
+                        selectedAppImage: this.selectedAppImage,
+                        detailSource: this.detailSource
+                    }));
+                    history[push ? 'pushState' : 'replaceState'](state, '');
+                },
+
+                restoreNavigation(state) {
+                    ++this.searchRequestSequence;
+                    this.loadingAppList = false;
+                    this.resetDetail();
+                    for (const key of ['historyDepth', 'pageState', 'areaCode', 'appName',
+                        'searchQuery', 'searchAreaCode', 'appList', 'errorAppList',
+                        'appId', 'selectedAppName', 'selectedAppImage', 'detailSource']) {
+                        this[key] = state[key];
+                    }
+                    if (this.pageState === 'detail') {
+                        this.currentTab = 'comparison';
+                        this.searchApp();
+                    } else if (this.pageState === 'search') {
+                        this.appName = this.searchQuery;
+                        this.areaCode = this.searchAreaCode;
+                        if (state.loadingAppList) this.searchAppList(false);
+                    } else {
+                        this.appName = '';
+                        this.getPopularAppList();
+                    }
+                    this.$nextTick(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+                },
+
+                navigateBack(steps = 1) {
+                    if (this.historyNavigating) return;
+                    this.saveNavigation();
+                    this.historyNavigating = true;
+                    history.go(-steps);
+                },
+
                 // 搜索应用列表
-                async searchAppList() {
-                    if (this.loadingAppList || this.loading) return;
+                async searchAppList(recordHistory = true) {
+                    if (this.loadingAppList || this.loading || this.historyNavigating) return;
                     const searchName = this.appName.trim();
                     if (!searchName) {
                         this.errorAppList = '请输入应用名称';
@@ -911,6 +1043,7 @@
                     }
 
                     this.$refs.searchInput.blur();
+                    if (recordHistory) this.saveNavigation();
                     this.resetDetail();
                     const requestSequence = ++this.searchRequestSequence;
                     this.pageState = 'search';
@@ -920,6 +1053,7 @@
                     this.loadingAppList = true;
                     this.errorAppList = '';
                     this.appList = [];
+                    this.saveNavigation(recordHistory);
 
                     try {
                         const response = await axios.post('/app/getAppList', {
@@ -939,13 +1073,15 @@
                     } finally {
                         if (requestSequence === this.searchRequestSequence) {
                             this.loadingAppList = false;
+                            this.saveNavigation();
                         }
                     }
                 },
 
                 // 选择应用
                 async selectApp(app) {
-                    if (this.loadingAppList || this.pageState === 'detail') return;
+                    if (this.loadingAppList || this.pageState === 'detail' || this.historyNavigating) return;
+                    this.saveNavigation();
                     this.errorAppList = '';
                     this.resetDetail();
                     this.detailSource = this.pageState === 'search' ? 'search' : 'popular';
@@ -955,6 +1091,7 @@
                     this.appName = app.appName;
                     this.pageState = 'detail';
                     this.currentTab = 'comparison';
+                    this.saveNavigation(true);
 
                     this.$nextTick(() => {
                         window.scrollTo({ top: 0, behavior: 'auto' });
@@ -1042,6 +1179,7 @@
 
                 resetDetail() {
                     ++this.detailRequestSequence;
+                    this.selectedDetailAreas = [];
                     this.appId = '';
                     this.selectedAppName = '';
                     this.selectedAppImage = '';
@@ -1054,6 +1192,10 @@
                 },
 
                 clearSearch() {
+                    if (this.historyDepth > 0) {
+                        this.navigateBack(this.historyDepth);
+                        return;
+                    }
                     const refreshPopularApps = this.pageState !== 'home';
                     ++this.searchRequestSequence;
                     this.loadingAppList = false;
@@ -1063,6 +1205,7 @@
                     this.appName = '';
                     this.resetDetail();
                     this.pageState = 'home';
+                    this.saveNavigation();
                     if (refreshPopularApps) this.getPopularAppList();
                 },
 
@@ -1072,17 +1215,7 @@
 
                 returnToList() {
                     if (this.pageState !== 'detail') return;
-                    if (this.detailSource === 'search') {
-                        this.resetDetail();
-                        this.appName = this.searchQuery;
-                        this.areaCode = this.searchAreaCode;
-                        this.pageState = 'search';
-                    } else {
-                        this.clearSearch();
-                    }
-                    this.$nextTick(() => {
-                        window.scrollTo({ top: 0, behavior: 'auto' });
-                    });
+                    this.navigateBack();
                 },
 
                 // 获取地区列表
@@ -1104,6 +1237,7 @@
 
                 onAreaChange(areaCode) {
                     this.areaCode = areaCode;
+                    this.saveNavigation();
                     if (this.pageState === 'home') this.getPopularAppList();
                 },
 
