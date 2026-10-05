@@ -95,7 +95,8 @@ public class AppService {
                 return appListCache;
             }
             List<GetAppListResDTO> resultList = new CopyOnWriteArrayList<>();
-            CollUtil.newArrayList("iphone", "ipad", "mac", "tv").parallelStream().forEach(entity -> {
+            List<String> platforms = List.of("iphone", "ipad", "mac", "tv");
+            platforms.parallelStream().forEach(entity -> {
                 String searchUrl = StrUtil.format("https://apps.apple.com/{}/{}/search?term={}", reqDTO.getAreaCode(), entity, StrUtil.trim(reqDTO.getAppName()));
                 HttpResponse response = HttpUtil.createGet(searchUrl).execute();
                 if (!response.isOk()) {
@@ -133,10 +134,13 @@ public class AppService {
                 }).toList();
                 resultList.addAll(entityResultList);
             });
-            APP_LIST_CACHE.put(cacheKey, resultList.stream().collect(Collectors.toMap(
+            // 按固定平台优先级去重，避免并行请求完成顺序改变应用图标和平台。
+            APP_LIST_CACHE.put(cacheKey, resultList.stream()
+                .sorted(Comparator.comparingInt(item -> platforms.indexOf(item.getPlatform())))
+                .collect(Collectors.toMap(
                     GetAppListResDTO::getAppId,
                     Function.identity(),
-                    (existingValue, newValue) -> StrUtil.equals("iphone", existingValue.getPlatform()) ? existingValue : newValue,
+                    (existingValue, newValue) -> existingValue,
                     LinkedHashMap::new))
                 .values()
                 .stream()

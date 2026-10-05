@@ -41,21 +41,20 @@ public class AppPopularityService {
     private final Set<ClickKey> countedClicks = new HashSet<>();
 
     /**
-     * 只暂存服务端搜索到的应用标识、图标和平台，不使用搜索文案更新排行。
+     * 只暂存尚未累计点击的应用元数据，搜索不覆盖已累计应用的图标、平台和文案。
      */
     public synchronized void rememberSearchResults(List<GetAppListResDTO> appList) {
         long now = System.nanoTime();
         removeExpiredEntries(now);
         for (GetAppListResDTO app : appList) {
+            if (appMetadataById.containsKey(app.getAppId())) {
+                continue;
+            }
             AppMetadata metadata = new AppMetadata(
                 app.getAppId(), app.getAppImage(), app.getPlatform());
-            if (appMetadataById.containsKey(app.getAppId())) {
-                appMetadataById.put(app.getAppId(), metadata);
-            } else {
-                // 更新插入顺序，保持过期清理可以从最早的记录开始。
-                pendingMetadataById.remove(app.getAppId());
-                pendingMetadataById.put(app.getAppId(), new SearchMetadata(metadata, now));
-            }
+            // 更新插入顺序，保持过期清理可以从最早的记录开始。
+            pendingMetadataById.remove(app.getAppId());
+            pendingMetadataById.put(app.getAppId(), new SearchMetadata(metadata, now));
         }
     }
 
