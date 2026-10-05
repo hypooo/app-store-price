@@ -222,16 +222,22 @@ public class AppService {
                     .filter(item -> areaEnum.getInAppPurchaseStr().equals(item.getString("title")))
                     .findFirst()
                     .map(item -> item.getJSONArray("items"))
-                    .map(item -> item.getJSONObject(0))
-                    .map(item -> item.getJSONArray("textPairs"))
                     .orElse(new JSONArray());
                 // 存储解析结果
                 List<InAppPurchaseDTO> inAppPurchaseList = new ArrayList<>();
                 for (int i = 0; i < inAppPurchaseArray.size(); i++) {
-                    JSONArray jsonArray = inAppPurchaseArray.getJSONArray(i);
+                    JSONObject purchaseItem = inAppPurchaseArray.getJSONObject(i);
+                    if (!"textPair".equals(purchaseItem.getString("$kind"))) {
+                        continue;
+                    }
+                    String object = purchaseItem.getString("leadingText");
+                    String price = purchaseItem.getString("trailingText");
+                    if (StrUtil.isBlank(object) || StrUtil.isBlank(price)) {
+                        throw new BizException(StrUtil.format("invalid in-app purchase data, appId: {}, area: {}", appId, areaEnum.getCode()));
+                    }
                     InAppPurchaseDTO purchaseDTO = new InAppPurchaseDTO();
-                    purchaseDTO.setObject(jsonArray.getString(0));
-                    purchaseDTO.setPrice(parsePrice(jsonArray.getString(1), areaEnum));
+                    purchaseDTO.setObject(object);
+                    purchaseDTO.setPrice(parsePrice(price, areaEnum));
                     inAppPurchaseList.add(purchaseDTO);
                 }
                 resDTO.setInAppPurchaseList(inAppPurchaseList);
@@ -289,7 +295,8 @@ public class AppService {
         List<Money> appPriceList = appInfoList.stream()
             .map(GetAppInfoResDTO::getPrice)
             .collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(appPriceList)) {
+        // 仅在至少一个地区收费时返回软件本体，并保留所有地区价格供比较。
+        if (appPriceList.stream().anyMatch(price -> price.getPrice().signum() > 0)) {
             comparisonMap.put("软件本体", appPriceList);
         }
 
