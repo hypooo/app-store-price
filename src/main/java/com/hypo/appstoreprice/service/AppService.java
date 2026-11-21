@@ -5,9 +5,11 @@ import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.mutable.Mutable;
 import cn.hutool.core.lang.mutable.MutableObj;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -58,6 +60,11 @@ public class AppService {
     private static final ConcurrentHashMap<String, Object> LOCK_POOL = new ConcurrentHashMap<>();
 
     /**
+     * 429 重试间隔（毫秒）
+     */
+    private static final long[] RETRY_INTERVALS = {1000L, 3000L, 5000L, 7000L, 9000L};
+
+    /**
      * get area list
      *
      * @return {@link List }<{@link AreaResDTO }>
@@ -95,10 +102,10 @@ public class AppService {
                 return appListCache;
             }
             List<GetAppListResDTO> resultList = new CopyOnWriteArrayList<>();
-            List<String> platforms = List.of("iphone", "ipad", "mac", "tv");
-            platforms.parallelStream().forEach(entity -> {
+            List<String> platforms = CollUtil.newArrayList("iphone", "ipad", "mac", "tv");
+            platforms.forEach(entity -> {
                 String searchUrl = StrUtil.format("https://apps.apple.com/{}/{}/search?term={}", reqDTO.getAreaCode(), entity, StrUtil.trim(reqDTO.getAppName()));
-                HttpResponse response = HttpUtil.createGet(searchUrl).execute();
+                HttpResponse response = executeGet(searchUrl, false);
                 if (!response.isOk()) {
                     String errorMessage = StrUtil.format("search failed, areaCode: {}, appName: {}", reqDTO.getAreaCode(), reqDTO.getAppName());
                     log.error(errorMessage);
@@ -185,7 +192,7 @@ public class AppService {
             Mutable<List<GetAppInfoResDTO>> resultList = new MutableObj<>(new CopyOnWriteArrayList<>());
             Arrays.stream(AreaEnum.values()).parallel().forEach(areaEnum -> {
                 String appStoreUrl = StrUtil.format("https://apps.apple.com/{}/app/id{}", areaEnum.getCode(), appId);
-                HttpResponse response = HttpUtil.createGet(appStoreUrl, true).execute();
+                HttpResponse response = executeGet(appStoreUrl, true);
                 if (!response.isOk()) {
                     log.error("appId: {}, app not found in {} app store", appId, areaEnum.getCode());
                     log.error("{}-{}:failed", appId, areaEnum.getCode());
@@ -255,6 +262,26 @@ public class AppService {
             APP_INFO_CACHE.put(appId, resultList.get());
         }
         return APP_INFO_CACHE.get(appId);
+    }
+
+    /**
+     * 执行 GET 请求，遇到 429 时按递增间隔重试
+     *
+     * @param url               url
+     * @param isFollowRedirects 是否跟随重定向
+     * @return {@link HttpResponse }
+     */
+    private HttpResponse executeGet(String url, boolean isFollowRedirects) {
+        HttpResponse response = HttpUtil.createGet(url, isFollowRedirects).execute();
+        for (long interval : RETRY_INTERVALS) {
+            if (response.getStatus() != HttpStatus.HTTP_TOO_MANY_REQUESTS) {
+                break;
+            }
+            log.warn("too many requests, retry after {}ms, url: {}", interval, url);
+            ThreadUtil.sleep(interval);
+            response = HttpUtil.createGet(url, isFollowRedirects).execute();
+        }
+        return response;
     }
 
     /**
